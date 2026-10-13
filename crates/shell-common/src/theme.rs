@@ -7,42 +7,61 @@
 
 use crate::palette;
 
+/// Height of the statusbar, and the strip it reserves at the top of the
+/// screen. A widget that docks to an edge keeps its content out of that strip
+/// so it never sits underneath the bar.
+pub const BAR_HEIGHT: i32 = 32;
+
 /// Loaded before every widget stylesheet, which may override any of it.
+///
+/// The rules here follow one strict scale so the three widgets read as one
+/// system: spacing in 4/8/12/16/24, a single hairline in a low-contrast tone,
+/// one accent, and no shadows or gradients. Hierarchy comes from type size and
+/// weight plus empty space, not from borders and fills.
 pub const BASE_CSS: &str = r#"
 window {
   background-color: transparent;
 }
 
-/* Muted text: hints, timestamps, the compositor badge. */
+/* Muted text: timestamps, hints, the compositor badge. */
 .dim {
-  color: alpha(@palette_fg, 0.6);
-  font-size: 12px;
+  color: alpha(@palette_fg, 0.55);
+  font-size: 11px;
 }
 
-/* Any raised area on top of the desktop: the sidebar panel, the launcher. */
+/* Any raised area over the desktop: the sidebar panel, the launcher. */
 .surface {
   background-color: @palette_bg;
   color: @palette_fg;
-  border: 1px solid @palette_color8;
-  border-radius: 6px;
+  border: 1px solid alpha(@palette_fg, 0.14);
+  border-radius: 4px;
 }
 
-/* Ghost button, shared by the statusbar chips and the sidebar actions. */
+/* Ghost button, shared by the statusbar chips and the sidebar actions: a
+   hairline box that only fills in on hover. */
 button {
-  border: none;
-  box-shadow: none;
+  border: 1px solid alpha(@palette_fg, 0.14);
+  background-color: transparent;
   background-image: none;
-  background-color: alpha(@palette_fg, 0.1);
+  box-shadow: none;
   color: @palette_fg;
-  font-size: 12px;
-  padding: 2px 10px;
-  min-height: 18px;
-  min-width: 18px;
-  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  min-height: 20px;
+  min-width: 20px;
+  border-radius: 4px;
 }
 
 button:hover {
-  background-color: alpha(@palette_fg, 0.18);
+  background-color: alpha(@palette_fg, 0.08);
+  border-color: alpha(@palette_fg, 0.3);
+}
+
+button:disabled {
+  background-color: transparent;
+  border-color: alpha(@palette_fg, 0.06);
+  color: alpha(@palette_fg, 0.35);
 }
 "#;
 

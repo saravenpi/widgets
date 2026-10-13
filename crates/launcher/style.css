@@ -6,14 +6,16 @@
   padding: 6px 0;
 }
 
+/* The query line is the panel's top rule: no field chrome, just type. */
 entry {
-  min-height: 42px;
-  padding: 0 14px;
+  min-height: 44px;
+  padding: 0 16px;
   font-size: 15px;
   color: @palette_fg;
   background-color: transparent;
   background-image: none;
   border-width: 0;
+  border-bottom: 1px solid alpha(@palette_fg, 0.14);
   box-shadow: none;
 }
 
@@ -24,7 +26,7 @@ list {
 }
 
 row {
-  padding: 7px 14px;
+  padding: 8px 16px;
   background-color: transparent;
   background-image: none;
   color: @palette_fg;
@@ -32,7 +34,7 @@ row {
 }
 
 row:hover {
-  background-color: alpha(@palette_fg, 0.08);
+  background-color: alpha(@palette_fg, 0.06);
 }
 
 /* Selected row uses the same accent as the focused workspace chip. */

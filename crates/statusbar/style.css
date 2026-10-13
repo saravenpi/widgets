@@ -3,25 +3,36 @@
    window, ghost buttons, muted text) lives in shell_common::theme. */
 
 .bar {
-  min-height: 30px;
-  background-color: alpha(@palette_bg, 0.94);
+  min-height: 32px;
+  background-color: alpha(@palette_bg, 0.96);
   color: @palette_fg;
+  border-bottom: 1px solid alpha(@palette_fg, 0.14);
 }
 
+/* Chips stay plain type until they mean something, so the accent keeps its
+   weight: filled for the focused workspace, an underline for an urgent one. */
 .workspaces {
   margin-left: 8px;
 }
 
-.clock {
-  font-size: 12px;
+button.ws {
+  border: none;
+  background-color: transparent;
+  border-radius: 3px;
+  min-width: 22px;
+  min-height: 0;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: alpha(@palette_fg, 0.62);
+}
+
+button.ws:hover {
+  border: none;
+  background-color: alpha(@palette_fg, 0.1);
   color: @palette_fg;
 }
 
-.badge {
-  margin-right: 10px;
-}
-
-/* The focused workspace takes the accent, an urgent one the alert colour. */
 button.ws.focused,
 button.ws.focused:hover {
   background-color: @palette_color4;
@@ -30,6 +41,21 @@ button.ws.focused:hover {
 
 button.ws.urgent,
 button.ws.urgent:hover {
-  background-color: @palette_color1;
+  background-color: transparent;
+  color: @palette_color1;
+  border-bottom: 2px solid @palette_color1;
+}
+
+.clock {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
   color: @palette_fg;
+}
+
+.badge {
+  margin-right: 10px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }

@@ -1,60 +1,73 @@
-/* Right-hand notification panel. `.surface` (shell_common::theme) already
-   gives it the palette background, the hairline border and the radius; the
-   panel only drops the radius because it sits flush against the screen edge. */
+/* Right-hand notification panel. `.surface` (shell_common::theme) gives it the
+   palette background and the hairline; the panel squares the corners off and
+   keeps only the rule against the screen edge, because it sits flush there. */
 
 .panel {
   border-width: 0;
   border-left-width: 1px;
   border-radius: 0;
-  padding: 12px;
+  padding: 14px 14px 12px 16px;
+}
+
+/* The one rule above the list, under the title row. */
+.header {
+  border-bottom: 1px solid alpha(@palette_fg, 0.14);
+  padding-bottom: 10px;
 }
 
 .title {
-  font-weight: bold;
-  font-size: 1.1em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: @palette_fg;
 }
 
 .count {
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 500;
 }
 
-/* Outlined ghost buttons: `.surface`'s neighbours, so they stay quiet. */
 .clear,
 .dismiss {
-  background-color: transparent;
-  border: 1px solid @palette_color8;
   padding: 2px 8px;
   min-width: 0;
   min-height: 0;
 }
 
-.clear:hover,
+.dismiss {
+  min-width: 20px;
+  padding: 0 6px;
+  color: alpha(@palette_fg, 0.55);
+}
+
 .dismiss:hover {
+  background-color: transparent;
+  border-color: alpha(@palette_color1, 0.7);
   color: @palette_color1;
-  border-color: @palette_color1;
 }
 
-.clear:disabled {
-  opacity: 0.5;
-}
-
-/* One notification. */
+/* One notification: not a card, just a rule between entries. */
 .row {
-  background-color: @palette_color0;
-  border-radius: 6px;
-  padding: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid alpha(@palette_fg, 0.1);
+}
+
+.row:last-child {
+  border-bottom: none;
 }
 
 .row.urgent {
-  border-left: 3px solid @palette_color1;
+  border-left: 2px solid @palette_color1;
+  padding-left: 10px;
 }
 
 .summary {
-  font-weight: bold;
+  font-size: 13px;
+  font-weight: 600;
   color: @palette_fg;
 }
 
 .body {
-  color: @palette_fg;
+  font-size: 12px;
+  color: alpha(@palette_fg, 0.78);
 }
