@@ -6,6 +6,30 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-13
+
+### Fixed
+
+- musl builds now work with rustup's toolchain, not just a distribution one.
+  Every musl Rust target defaults to `+crt-static` (RFC 1721), which asks the
+  linker for the *static* build of GTK4 and gtk4-layer-shell, so the build died
+  at the link step with `ld: cannot find -lglib-2.0` and `ld: have you installed
+  the static version of the glib-2.0 library ?` — advice that cannot be taken,
+  because Alpine and Void ship those libraries as shared objects only. The
+  repository now carries a `.cargo/config.toml` that sets
+  `-C target-feature=-crt-static` for `cfg(target_env = "musl")`, so the system
+  libraries link dynamically the way they already do on glibc. The rule is
+  architecture independent and covers x86_64, aarch64, armv7 and riscv64 musl
+  targets, and it never matches a glibc target.
+- `shell-common`: the stylesheet check validates the widget sheets on every
+  run. It used to return early with "no display available" unless a compositor
+  was present, which meant CI passed it without parsing anything. GTK parses
+  CSS without a display, so the check is now unconditional and also asserts
+  that GTK still reports the CSS it rejects — otherwise it could go back to
+  passing vacuously without anyone noticing. All GTK calls stay in one test:
+  GTK is not thread safe, and two tests parsing at once report errors that are
+  not there.
+
 ## [0.2.1] - 2026-10-13
 
 ### Fixed
