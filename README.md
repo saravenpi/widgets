@@ -28,6 +28,7 @@ verify it without a compositor.
 | Wayland compositor with wlr-layer-shell | the windows are layer surfaces | sway, niri or Hyprland |
 | GTK4 development files | the `gtk4` crate is built against them | **4.10** (matches the `v4_10` feature) |
 | gtk4-layer-shell development files | layer-surface support | C library 1.0+ (crate `gtk4-layer-shell` 0.8) |
+| the `undefined` font | the typeface every widget is set in | [undefined-medium.com](https://undefined-medium.com), `fonts` package |
 | Rust + Cargo | the build | 1.85+ (pinned by `gtk4-layer-shell-sys`) |
 | pkg-config and a C toolchain | the `-sys` crates use them | any |
 
@@ -155,13 +156,19 @@ It follows a single Swiss-typographic scale rather than a per-widget look:
 - **Hairlines, not boxes.** One 1 px rule in a low-contrast tone marks a
   division: under the bar, under the panel title, between notifications.
 - **Type carries the hierarchy** — size and weight (500/600) rather than fills,
-  shadows or gradients. Nothing is decorated for its own sake.
+  shadows or gradients. Nothing is decorated for its own sake. Everything is set
+  in [undefined](https://undefined-medium.com).
 - **One accent.** `palette_color4` marks the focused workspace and the selected
   launcher row; `palette_color1` is reserved for urgency.
-- **Flat and squared off** — 4 px radii, no shadows, no gradients.
+- **Flat and squared off** — 4 px radii, no shadows, no gradients. The statusbar
+  is the exception: it floats as a rounded pill inset from the screen edges,
+  with circular workspace chips inside it.
+- **Toasts, not requests.** A notification that arrives while the panel is shut
+  shows itself in the top-right rather than waiting for `mod+n`.
 
-The statusbar reserves a 32 px strip at the top (`shell_common::theme::BAR_HEIGHT`);
-the sidebar starts below it instead of covering the bar's right-hand end.
+The statusbar reserves a 40 px strip at the top (`shell_common::theme::BAR_HEIGHT`),
+the pill plus its margins; the sidebar and the toasts start below it instead of
+covering the bar's right-hand end.
 
 ## Colors
 
@@ -187,6 +194,7 @@ Start the bar from your compositor; all three binaries live in `~/.local/bin`.
 ```text
 # sway      ~/.config/sway/config
 exec $HOME/.local/bin/statusbar
+exec $HOME/.local/bin/sidebar         # owns org.freedesktop.Notifications
 bindsym $mod+n      exec $HOME/.local/bin/sidebar toggle
 bindsym $mod+space  exec $HOME/.local/bin/launcher
 
@@ -218,6 +226,18 @@ stream for **sway** (i3 protocol) and **niri**, and `.socket2.sock` for
 the session bus and keeps the last 50 notifications in
 `$XDG_STATE_HOME/widgets/notifications.json` (`~/.local/state/widgets/…`).
 Press `Esc` or click `x` to dismiss a notification, `Clear all` to empty the list.
+
+Because it owns the bus name, it has to be running for notifications to arrive
+at all — start it from the compositor (the bare `sidebar` line above) rather than
+waiting for the first `mod+n`. Only one process can hold
+`org.freedesktop.Notifications`, so **do not run mako alongside it**: the second
+daemon fails to claim the name and its notifications go to whichever one got
+there first.
+
+A notification that arrives while the panel is closed is not lost. It shows as a
+toast in the top-right, below the statusbar, for six seconds — critical ones stay
+until dismissed — and it lands in the history either way. Click a toast to
+dismiss it; the panel lists everything that arrived, toasts or not.
 
 The two ways to start it mean different things:
 

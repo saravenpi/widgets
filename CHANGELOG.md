@@ -4,7 +4,27 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-10-13
+
+### Added
+
+- Every widget is now set in [undefined](https://undefined-medium.com), the
+  typeface sway, foot and kitty already use. The family is a single rule in the
+  shared base sheet, so a widget that adds a label inherits it.
+- `sidebar`: a notification that arrives while the panel is closed now shows as
+  a toast in the top-right, below the statusbar, instead of waiting for `mod+n`.
+  A toast expires after six seconds, a critical one stays until it is clicked
+  away, and the newest four are kept. Toasts are in memory only; the panel's
+  history file is unchanged.
+
+### Changed
+
+- `statusbar`: the bar is a floating pill inset from every screen edge and
+  rounded past half its height, instead of a full-width strip with a rule under
+  it. The workspace chips are circles — a filled accent for the focused
+  workspace, a ring for an urgent one.
+- `shell-common`: `theme::BAR_HEIGHT` is 40 (the 32 px pill plus its 4 px
+  margins), the strip the compositor reserves and the sidebar docks below.
 
 ## [0.4.0] - 2026-10-13
 

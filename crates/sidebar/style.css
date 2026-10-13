@@ -71,3 +71,19 @@
   font-size: 12px;
   color: alpha(@palette_fg, 0.78);
 }
+
+/* Top-right toasts: the transient half of the daemon. A notification that
+   arrives while the panel is closed still has to be visible somewhere, so it
+   lands here as a card under the statusbar and expires on its own. */
+.toast {
+  padding: 10px 12px;
+  background-color: alpha(@palette_bg, 0.96);
+  color: @palette_fg;
+  border: 1px solid alpha(@palette_fg, 0.12);
+  border-left: 3px solid @palette_color4;
+  border-radius: 6px;
+}
+
+.toast.urgent {
+  border-left-color: @palette_color1;
+}

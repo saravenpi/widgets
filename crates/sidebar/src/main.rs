@@ -1,5 +1,6 @@
 mod dbus;
 mod model;
+mod popup;
 
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -28,6 +29,7 @@ struct App {
     clear: gtk4::Button,
     items: RefCell<Vec<model::Notification>>,
     time_labels: RefCell<Vec<(gtk4::Label, i64)>>,
+    toasts: Rc<popup::Popups>,
     handle: tokio::runtime::Handle,
 }
 
@@ -150,6 +152,7 @@ fn apply_event(app: &Rc<App>, event: &Event) {
     match event {
         Event::Added(notification) => {
             model::insert(&mut app.items.borrow_mut(), notification.clone());
+            app.toasts.add(notification.clone());
         }
         Event::Removed(id) => {
             app.items.borrow_mut().retain(|item| item.id != *id);
@@ -204,6 +207,14 @@ impl App {
 
         window.set_child(Some(&root));
 
+        let application = window
+            .application()
+            .expect("sidebar: the panel window has an application");
+        let toast_handle = handle.clone();
+        let toasts = popup::Popups::new(&application, move |id, reason| {
+            dbus::emit_closed(&toast_handle, id, reason);
+        });
+
         let app = Rc::new(App {
             window,
             list,
@@ -213,6 +224,7 @@ impl App {
             clear,
             items: RefCell::new(items),
             time_labels: RefCell::new(Vec::new()),
+            toasts,
             handle,
         });
 
@@ -316,6 +328,7 @@ impl App {
         app.items.borrow_mut().retain(|item| item.id != id);
         model::save(&app.items.borrow());
         App::rebuild(app);
+        app.toasts.dismiss(id);
         dbus::emit_closed(&app.handle, id, 2);
     }
 
@@ -325,6 +338,7 @@ impl App {
         model::save(&app.items.borrow());
         App::rebuild(app);
         for id in ids {
+            app.toasts.dismiss(id);
             dbus::emit_closed(&app.handle, id, 2);
         }
     }
@@ -418,6 +432,18 @@ mod tests {
         assert!(!panel.scroll.is_visible());
         assert!(panel.empty.is_visible());
         assert!(!panel.clear.is_sensitive());
+
+        // A notification that arrives while the panel is closed still has to be
+        // visible: the daemon stacks it as a top-right toast and expires it.
+        panel.toasts.add(notification(3, false));
+        panel.toasts.add(notification(4, true));
+        assert_eq!(panel.toasts.visible(), 2, "toasts stack in the top-right");
+        assert!(panel.toasts.surface().is_visible());
+
+        panel.toasts.force_expiry();
+        panel.toasts.expire();
+        assert_eq!(panel.toasts.visible(), 0, "an expired toast leaves the stack");
+        assert!(!panel.toasts.surface().is_visible());
 
         let _ = std::fs::remove_dir_all(&state);
     }

@@ -18,8 +18,9 @@ use crate::palette;
 
 /// Height of the statusbar, and the strip it reserves at the top of the
 /// screen. A widget that docks to an edge keeps its content out of that strip
-/// so it never sits underneath the bar.
-pub const BAR_HEIGHT: i32 = 32;
+/// so it never sits underneath the bar. The bar itself is a floating pill, so
+/// this is the pill (32px) plus its top and bottom margins (4px each).
+pub const BAR_HEIGHT: i32 = 40;
 
 /// Loaded before every widget stylesheet, which may override any of it.
 ///
@@ -30,6 +31,7 @@ pub const BAR_HEIGHT: i32 = 32;
 pub const BASE_CSS: &str = r#"
 window {
   background-color: transparent;
+  font-family: "undefined";
 }
 
 /* Muted text: timestamps, hints, the compositor badge. */

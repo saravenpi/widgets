@@ -1,35 +1,43 @@
 /* Top bar: workspace chips on the left, clock in the middle, compositor badge
    on the right. Everything it shares with the other widgets (transparent
-   window, ghost buttons, muted text) lives in shell_common::theme. */
+   window, ghost buttons, muted text, the undefined font) lives in
+   shell_common::theme. */
 
+/* A floating pill, not a full-width strip: it is inset from every screen edge
+   and rounded past half its height, so the corners read as a capsule. The
+   window is `theme::BAR_HEIGHT` tall, which is this pill plus its margins, and
+   that is the strip the compositor reserves. */
 .bar {
   min-height: 32px;
-  background-color: alpha(@palette_bg, 0.96);
+  margin: 4px 6px;
+  padding: 0 6px;
+  background-color: alpha(@palette_bg, 0.92);
   color: @palette_fg;
-  border-bottom: 1px solid alpha(@palette_fg, 0.14);
+  border: 1px solid alpha(@palette_fg, 0.12);
+  border-radius: 999px;
 }
 
 /* Chips stay plain type until they mean something, so the accent keeps its
-   weight: filled for the focused workspace, an underline for an urgent one. */
+   weight: a filled circle for the focused workspace, a ring for an urgent one. */
 .workspaces {
-  margin-left: 8px;
+  margin-left: 6px;
 }
 
 button.ws {
   border: none;
-  background-color: transparent;
-  border-radius: 3px;
-  min-width: 22px;
-  min-height: 0;
-  padding: 3px 7px;
-  font-size: 11px;
+  background-color: alpha(@palette_fg, 0.1);
+  border-radius: 999px;
+  min-width: 20px;
+  min-height: 20px;
+  padding: 0;
+  font-size: 10px;
   font-weight: 600;
-  color: alpha(@palette_fg, 0.62);
+  color: alpha(@palette_fg, 0.7);
 }
 
 button.ws:hover {
   border: none;
-  background-color: alpha(@palette_fg, 0.1);
+  background-color: alpha(@palette_fg, 0.18);
   color: @palette_fg;
 }
 
@@ -43,7 +51,7 @@ button.ws.urgent,
 button.ws.urgent:hover {
   background-color: transparent;
   color: @palette_color1;
-  border-bottom: 2px solid @palette_color1;
+  border: 2px solid @palette_color1;
 }
 
 .clock {
