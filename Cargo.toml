@@ -8,7 +8,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.2.0"
+version = "0.2.1"
 edition = "2021"
 license = "MIT"
 
@@ -17,6 +17,9 @@ gtk4 = { version = "0.11", features = ["v4_10"] }
 gtk4-layer-shell = "0.8"
 shell-common = { path = "crates/shell-common" }
 
+# Thin LTO keeps cross-crate optimization but not fat LTO's peak memory. The
+# three binaries link in parallel and the sidebar (zbus + tokio + gtk4) is large
+# enough that fat LTO gets OOM-killed on memory-constrained machines.
 [profile.release]
-lto = true
+lto = "thin"
 strip = true
