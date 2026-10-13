@@ -1,13 +1,9 @@
-window {
-  background-color: transparent;
-}
+/* Centered launcher. `.surface` (shell_common::theme) provides the panel
+   background, border and radius; only the search field and the rows are
+   specific to this widget. */
 
 .popup {
-  background-color: @palette_bg;
-  border-width: 1px;
-  border-style: solid;
-  border-color: @palette_color8;
-  border-radius: 8px;
+  padding: 6px 0;
 }
 
 entry {
@@ -39,6 +35,7 @@ row:hover {
   background-color: alpha(@palette_fg, 0.08);
 }
 
+/* Selected row uses the same accent as the focused workspace chip. */
 row:selected {
   background-color: @palette_color4;
   color: @palette_bg;
@@ -46,9 +43,4 @@ row:selected {
 
 row:selected .dim {
   color: alpha(@palette_bg, 0.75);
-}
-
-.dim {
-  color: @palette_color8;
-  font-size: 12px;
 }

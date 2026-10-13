@@ -30,7 +30,7 @@ pub fn discover() -> Vec<App> {
             }
         }
     }
-    found.sort_by(|left, right| left.name.to_lowercase().cmp(&right.name.to_lowercase()));
+    found.sort_by_key(|app| app.name.to_lowercase());
     found
 }
 

@@ -1,7 +1,11 @@
+/* Right-hand notification panel. `.surface` (shell_common::theme) already
+   gives it the palette background, the hairline border and the radius; the
+   panel only drops the radius because it sits flush against the screen edge. */
+
 .panel {
-  background-color: @palette_bg;
-  color: @palette_fg;
-  border-left: 1px solid @palette_color8;
+  border-width: 0;
+  border-left-width: 1px;
+  border-radius: 0;
   padding: 12px;
 }
 
@@ -12,15 +16,14 @@
 }
 
 .count {
-  color: @palette_color8;
+  font-weight: bold;
 }
 
+/* Outlined ghost buttons: `.surface`'s neighbours, so they stay quiet. */
 .clear,
 .dismiss {
-  color: @palette_fg;
   background-color: transparent;
   border: 1px solid @palette_color8;
-  border-radius: 4px;
   padding: 2px 8px;
   min-width: 0;
   min-height: 0;
@@ -36,6 +39,7 @@
   opacity: 0.5;
 }
 
+/* One notification. */
 .row {
   background-color: @palette_color0;
   border-radius: 6px;
@@ -53,8 +57,4 @@
 
 .body {
   color: @palette_fg;
-}
-
-.dim {
-  color: @palette_color8;
 }

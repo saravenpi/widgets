@@ -1,2 +1,3 @@
 pub mod layer;
-pub mod palette;
+mod palette;
+pub mod theme;

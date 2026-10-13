@@ -34,9 +34,13 @@ make install   # copy the three binaries to ~/.local/bin
 
 System dependencies:
 
-- Alpine: `apk add gtk4-layer-shell-dev`
+- Alpine: `apk add gtk4-layer-shell-dev` (it pulls in `gtk4.0-dev`)
 - Debian/Ubuntu: `libgtk-4-dev` + gtk4-layer-shell dev package
 - Arch: `gtk4` + `gtk4-layer-shell`
+
+Alpine's Rust target is musl, so `make build` produces native musl binaries;
+`apk add rust cargo build-base gtk4-layer-shell-dev` is enough to build from
+source.
 
 ## Running
 

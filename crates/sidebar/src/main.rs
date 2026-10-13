@@ -30,7 +30,11 @@ struct App {
 
 fn main() {
     match std::env::args().nth(1).as_deref() {
-        Some("--version") => println!("sidebar 0.1.0"),
+        Some("--version") => println!(
+            "{} {}",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION")
+        ),
         Some(arg) if arg != "toggle" => {
             eprintln!("usage: sidebar [--version|toggle]");
             std::process::exit(2);
@@ -76,8 +80,7 @@ fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32) {
         remove_pidfile();
         std::process::exit(1);
     }
-    shell_common::palette::apply_palette();
-    shell_common::palette::apply_stylesheet(include_str!("style.css"));
+    shell_common::theme::init(include_str!("../style.css"));
 
     let layer = LayerWindow::new(app).layer(Layer::Overlay);
     layer.anchors(true, false, true, true);
@@ -117,7 +120,7 @@ fn deliver(event: Event) {
     let _ = glib::idle_add_once(move || {
         APP.with(|slot| {
             if let Some(app) = slot.borrow().as_ref() {
-                apply_event(&app, &event);
+                apply_event(app, &event);
             }
         });
     });
@@ -186,6 +189,7 @@ impl App {
 
         let count = gtk4::Label::new(Some("0"));
         count.add_css_class("count");
+        count.add_css_class("dim");
 
         let clear = gtk4::Button::with_label("Clear all");
         clear.add_css_class("clear");
@@ -206,6 +210,7 @@ impl App {
         empty.add_css_class("dim");
 
         let root = gtk4::Box::new(gtk4::Orientation::Vertical, 10);
+        root.add_css_class("surface");
         root.add_css_class("panel");
         root.append(&header);
         root.append(&scroll);

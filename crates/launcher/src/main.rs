@@ -14,7 +14,7 @@ use gtk4::{
 };
 use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 use shell_common::layer::{ensure_supported, LayerWindow};
-use shell_common::palette::{apply_palette, apply_stylesheet};
+use shell_common::theme;
 
 const STYLE: &str = include_str!("../style.css");
 const WIDTH: i32 = 600;
@@ -38,8 +38,7 @@ fn activate(application: &Application, apps: &Rc<Vec<App>>) {
     if !ensure_supported() {
         std::process::exit(1);
     }
-    apply_palette();
-    apply_stylesheet(STYLE);
+    theme::init(STYLE);
 
     let launcher = LayerWindow::new(application).layer(Layer::Overlay);
     launcher.anchors(true, true, true, false);
@@ -96,6 +95,7 @@ fn activate(application: &Application, apps: &Rc<Vec<App>>) {
     window.add_controller(controller);
 
     let popup = gtk4::Box::new(Orientation::Vertical, 0);
+    popup.add_css_class("surface");
     popup.add_css_class("popup");
     popup.set_width_request(WIDTH);
     popup.append(&entry);

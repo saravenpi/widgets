@@ -1,13 +1,13 @@
 mod ipc;
 
-use gtk::glib;
-use gtk::prelude::*;
-use gtk::{Application, ApplicationWindow, Label};
-use gtk4_layer_shell::LayerShell;
+use gtk4::glib;
+use gtk4::prelude::*;
+use gtk4::{Application, Label};
+use shell_common::layer::{ensure_supported, LayerWindow};
 
 fn main() {
-    if std::env::args().any(|arg| arg == "--version") {
-        println!("statusbar 0.1.0");
+    if std::env::args().skip(1).any(|arg| arg == "--version") {
+        println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
         return;
     }
     let app = Application::builder()
@@ -18,33 +18,24 @@ fn main() {
 }
 
 fn activate(app: &Application) {
-    if !gtk4_layer_shell::is_supported() {
-        eprintln!(
-            "statusbar: gtk4-layer-shell is not supported on this display; \
-             a Wayland compositor with zwlr_layer_shell_v1 is required"
-        );
+    if !ensure_supported() {
         std::process::exit(1);
     }
-    let window = ApplicationWindow::builder().application(app).build();
-    window.init_layer_shell();
-    window.set_layer(gtk4_layer_shell::Layer::Top);
-    window.set_anchor(gtk4_layer_shell::Edge::Top, true);
-    window.set_anchor(gtk4_layer_shell::Edge::Left, true);
-    window.set_anchor(gtk4_layer_shell::Edge::Right, true);
-    window.auto_exclusive_zone_enable();
-    window.set_height_request(30);
+    shell_common::theme::init(include_str!("../style.css"));
 
-    shell_common::palette::apply_palette();
-    shell_common::palette::apply_stylesheet(include_str!("../style.css"));
+    let bar = LayerWindow::new(app);
+    bar.anchors(true, true, true, false);
+    bar.exclusive_zone(true);
+    bar.window.set_height_request(30);
 
     let compositor = ipc::detect();
-    let root = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+    let root = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
     root.add_css_class("bar");
 
-    let workspaces = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    let workspaces = gtk4::Box::new(gtk4::Orientation::Horizontal, 6);
     workspaces.add_css_class("workspaces");
     workspaces.set_hexpand(true);
-    workspaces.set_halign(gtk::Align::Start);
+    workspaces.set_halign(gtk4::Align::Start);
     if compositor == ipc::Compositor::Unknown {
         workspaces.set_visible(false);
     }
@@ -52,17 +43,18 @@ fn activate(app: &Application) {
     let clock = Label::new(None);
     clock.add_css_class("clock");
     clock.set_hexpand(true);
-    clock.set_halign(gtk::Align::Center);
+    clock.set_halign(gtk4::Align::Center);
 
     let badge = Label::new(Some(ipc::name(compositor)));
     badge.add_css_class("badge");
+    badge.add_css_class("dim");
     badge.set_hexpand(true);
-    badge.set_halign(gtk::Align::End);
+    badge.set_halign(gtk4::Align::End);
 
     root.append(&workspaces);
     root.append(&clock);
     root.append(&badge);
-    window.set_child(Some(&root));
+    bar.window.set_child(Some(&root));
 
     update_clock(&clock);
     let ticking_clock = clock.clone();
@@ -82,17 +74,17 @@ fn activate(app: &Application) {
         ipc::start(compositor, tx);
     }
 
-    window.present();
+    bar.window.present();
 }
 
-fn rebuild(container: &gtk::Box, state: &[ipc::Workspace], compositor: ipc::Compositor) {
+fn rebuild(container: &gtk4::Box, state: &[ipc::Workspace], compositor: ipc::Compositor) {
     while let Some(child) = container.first_child() {
         container.remove(&child);
     }
     for workspace in state {
-        let button = gtk::Button::with_label(&workspace.label);
+        let button = gtk4::Button::with_label(&workspace.label);
         button.add_css_class("ws");
-        button.set_valign(gtk::Align::Center);
+        button.set_valign(gtk4::Align::Center);
         if workspace.focused {
             button.add_css_class("focused");
         }
