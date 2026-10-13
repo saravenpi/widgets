@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-13
+
+### Fixed
+
+- Release builds no longer get OOM-killed on memory-constrained machines. The
+  release profile used fat LTO (`lto = true`); linking the sidebar — the largest
+  binary, pulling in zbus, tokio and GTK4 — was killed with `SIGKILL` and
+  surfaced as `error: could not compile \`sidebar\``. `lto = "thin"` keeps
+  cross-crate optimization with a far lower memory ceiling.
+
 ## [0.2.0] - 2026-10-13
 
 ### Added
