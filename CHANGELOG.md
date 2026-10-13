@@ -6,6 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-13
+
+### Fixed
+
+- `sidebar`: the daemon could not be started at all through the compositor
+  binding. `Application::run` forwards the process command line to
+  `GApplication`, which reads a bare word as a *file to open*; a widget that
+  does not handle opening files aborts before `activate` runs, so
+  `sidebar toggle` died with `GLib-GIO-CRITICAL: This application can not open
+  files` and exit code 1, and `mod+n` never showed a panel. The three widgets
+  now run through one `shell_common::app::run`, which gives the application the
+  program name and nothing else. The same forwarded argument aborted
+  `statusbar` and `launcher` when they were started with any extra word.
+- `launcher`: the query line wore a blue border. The default theme paints a
+  2px accent outline *inside* a focused entry and the launcher never reset it.
+  The outline is gone and the rule under the query turns `palette_color4` while
+  it has focus — the same accent as the focused workspace chip and the selected
+  row. Buttons get the same reset in the shared base sheet, with a
+  palette-coloured focus border for keyboard navigation.
+
 ## [0.3.0] - 2026-10-13
 
 ### Fixed
