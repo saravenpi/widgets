@@ -12,20 +12,24 @@
 .bar {
   min-height: 32px;
   margin: 6px;
-  padding: 0 6px;
+  padding: 6px;
   background-color: alpha(@palette_bg, 0.92);
   color: @palette_fg;
   border-radius: 0;
 }
 
+.workspaces {
+}
+
 button.ws {
   background-color: alpha(@palette_fg, 0.1);
-  min-width: 20px;
-  min-height: 20px;
+  min-width: 26px;
+  min-height: 26px;
   padding: 0;
   font-size: 10px;
   font-weight: 600;
   color: @palette_fg;
+  border-radius: 0;
 }
 
 button.ws:hover {
@@ -52,11 +56,11 @@ button.ws.urgent:hover {
   letter-spacing: 0.02em;
   color: @palette_fg;
 }
-
+0 
 /* RAM and CPU, at the right-hand end: the same chips as the workspace ones, so
    the two ends of the bar read as one material. */
 .stats {
-  margin-left: 10px;
+  /* margin: 4px; */
 }
 
 .stat {
