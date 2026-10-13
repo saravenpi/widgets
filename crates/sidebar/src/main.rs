@@ -2,15 +2,17 @@ mod dbus;
 mod model;
 
 use std::cell::RefCell;
-use std::path::PathBuf;
 use std::rc::Rc;
 
 use gtk4::prelude::*;
 use gtk4::{gdk, glib, Application, ApplicationWindow, EventControllerKey};
-use gtk4_layer_shell::{KeyboardMode, Layer};
-use shell_common::layer::LayerWindow;
+use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
+use shell_common::{instance, layer::LayerWindow};
 
 use dbus::Event;
+
+/// The name this widget claims in `$XDG_RUNTIME_DIR` while the daemon lives.
+const WIDGET: &str = "sidebar";
 
 thread_local! {
     static APP: RefCell<Option<Rc<App>>> = const { RefCell::new(None) };
@@ -35,26 +37,50 @@ fn main() {
             env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION")
         ),
-        Some(arg) if arg != "toggle" => {
+        // The compositor binding. With no daemon running yet, starting one *is*
+        // the toggle, so the panel must come up visible: a hidden daemon would
+        // make the first `mod+n` look like it did nothing.
+        Some("toggle") => toggle_or_start(true),
+        // `sidebar` on its own primes the daemon without covering the screen,
+        // which is what a compositor's `exec` line wants.
+        None => toggle_or_start(false),
+        Some(_) => {
             eprintln!("usage: sidebar [--version|toggle]");
             std::process::exit(2);
         }
-        _ => toggle_or_start(),
     }
 }
 
-fn toggle_or_start() {
-    if let Some(pid) = read_pid() {
-        if process_alive(pid) && unsafe { libc::kill(pid, libc::SIGUSR1) } == 0 {
+fn toggle_or_start(show: bool) {
+    if let Some(pid) = instance::running(WIDGET) {
+        if unsafe { libc::kill(pid, libc::SIGUSR1) } == 0 {
             std::process::exit(0);
         }
     }
-    run_daemon();
+    run_daemon(show);
 }
 
-fn run_daemon() {
-    start_signal_listener();
-    write_pidfile();
+fn run_daemon(show: bool) {
+    // Hook SIGUSR1 before the pid file exists. A toggle that lands in between
+    // is then queued for the main loop, instead of running the signal's default
+    // action and killing the daemon while it starts.
+    let mut signals = match signal_hook::iterator::Signals::new([libc::SIGUSR1]) {
+        Ok(signals) => signals,
+        Err(err) => {
+            eprintln!("sidebar: cannot hook SIGUSR1: {err}");
+            std::process::exit(1);
+        }
+    };
+    if let Some(pid) = instance::claim(WIDGET) {
+        // Another copy won the race for the pid file: hand it the toggle.
+        unsafe { libc::kill(pid, libc::SIGUSR1) };
+        std::process::exit(0);
+    }
+    std::thread::spawn(move || {
+        for _ in signals.forever() {
+            let _ = glib::idle_add_once(toggle_from_signal);
+        }
+    });
     let items = model::load();
     let next_id = items
         .iter()
@@ -62,22 +88,22 @@ fn run_daemon() {
         .max()
         .unwrap_or(0)
         .saturating_add(1);
-    let app = Application::builder()
+    let application = Application::builder()
         .application_id("dev.saravenpi.Sidebar")
         .build();
-    app.connect_activate(move |app| activate(app, items.clone(), next_id));
-    let code = app.run();
-    remove_pidfile();
+    application.connect_activate(move |app| activate(app, items.clone(), next_id, show));
+    let code = application.run();
+    instance::release(WIDGET);
     std::process::exit(code.into());
 }
 
-fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32) {
+fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32, show: bool) {
     if let Some(existing) = APP.with(|slot| slot.borrow().clone()) {
         existing.window.present();
         return;
     }
     if !shell_common::layer::ensure_supported() {
-        remove_pidfile();
+        instance::release(WIDGET);
         std::process::exit(1);
     }
     shell_common::theme::init(include_str!("../style.css"));
@@ -87,25 +113,18 @@ fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32) {
     layer.exclusive_zone(false);
     layer.keyboard_mode(KeyboardMode::OnDemand);
     layer.window.set_width_request(360);
+    // Start below the statusbar (which reserves that strip for itself) instead
+    // of covering its right-hand end.
+    layer
+        .window
+        .set_margin(Edge::Top, shell_common::theme::BAR_HEIGHT);
 
     let handle = dbus::start(next_id);
     let built = App::build(layer.window.clone(), items, handle);
+    if show {
+        built.window.present();
+    }
     APP.with(|slot| *slot.borrow_mut() = Some(built));
-}
-
-fn start_signal_listener() {
-    let mut signals = match signal_hook::iterator::Signals::new([libc::SIGUSR1]) {
-        Ok(signals) => signals,
-        Err(err) => {
-            eprintln!("sidebar: cannot hook SIGUSR1: {err}");
-            std::process::exit(1);
-        }
-    };
-    std::thread::spawn(move || {
-        for _ in signals.forever() {
-            let _ = glib::idle_add_once(toggle_from_signal);
-        }
-    });
 }
 
 fn toggle_from_signal() {
@@ -137,40 +156,6 @@ fn apply_event(app: &Rc<App>, event: &Event) {
     }
     model::save(&app.items.borrow());
     App::rebuild(app);
-}
-
-fn pidfile_path() -> PathBuf {
-    if let Some(dir) = std::env::var_os("XDG_RUNTIME_DIR") {
-        let mut path = PathBuf::from(dir);
-        path.push("widgets-sidebar.pid");
-        return path;
-    }
-    PathBuf::from("/tmp/widgets-sidebar.pid")
-}
-
-fn read_pid() -> Option<i32> {
-    std::fs::read_to_string(pidfile_path())
-        .ok()?
-        .trim()
-        .parse()
-        .ok()
-}
-
-fn process_alive(pid: i32) -> bool {
-    if unsafe { libc::kill(pid, 0) } == 0 {
-        return true;
-    }
-    std::io::Error::last_os_error().raw_os_error() == Some(libc::EPERM)
-}
-
-fn write_pidfile() {
-    let _ = std::fs::write(pidfile_path(), std::process::id().to_string());
-}
-
-fn remove_pidfile() {
-    if read_pid() == Some(std::process::id() as i32) {
-        let _ = std::fs::remove_file(pidfile_path());
-    }
 }
 
 impl App {
@@ -356,5 +341,83 @@ impl App {
         } else {
             self.window.present();
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn notification(id: u32, urgent: bool) -> model::Notification {
+        model::Notification {
+            id,
+            app_name: "app".into(),
+            summary: format!("summary {id}"),
+            body: "body".into(),
+            ts: model::now(),
+            urgent,
+        }
+    }
+
+    fn children(parent: &gtk4::Box) -> usize {
+        let mut count = 0;
+        let mut child = parent.first_child();
+        while let Some(current) = child {
+            count += 1;
+            child = current.next_sibling();
+        }
+        count
+    }
+
+    /// The panel is real GTK, so it needs a display (Xvfb is enough). The
+    /// stylesheet check in `shell-common` is display-free on purpose; this one
+    /// cannot be, so it stands down rather than fail where there is none.
+    #[test]
+    fn panel_tracks_items() {
+        let state = std::env::temp_dir().join("widgets-sidebar-test-state");
+        std::env::set_var("XDG_STATE_HOME", &state);
+
+        if gtk4::init().is_err() {
+            eprintln!("sidebar: no display, skipping the panel test");
+            return;
+        }
+        let application = Application::builder()
+            .application_id("dev.saravenpi.SidebarTest")
+            .build();
+        application
+            .register(None::<&gtk4::gio::Cancellable>)
+            .expect("register the test application");
+        // `Widget::is_visible` walks the parent chain in GTK4, so the window has
+        // to be visible for the panel's own visibility to mean anything.
+        let window = ApplicationWindow::new(&application);
+        window.set_visible(true);
+        let runtime = tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+            .expect("tokio runtime");
+
+        let panel = App::build(
+            window.clone(),
+            vec![notification(1, false), notification(2, true)],
+            runtime.handle().clone(),
+        );
+        assert_eq!(panel.count.text().as_str(), "2");
+        assert_eq!(children(&panel.list), 2);
+        assert!(panel.scroll.is_visible());
+        assert!(!panel.empty.is_visible());
+        assert!(panel.clear.is_sensitive());
+
+        App::dismiss(&panel, 1);
+        assert_eq!(panel.count.text().as_str(), "1");
+        assert_eq!(children(&panel.list), 1);
+
+        App::clear_all(&panel);
+        assert_eq!(panel.count.text().as_str(), "0");
+        assert_eq!(children(&panel.list), 0);
+        assert!(!panel.scroll.is_visible());
+        assert!(panel.empty.is_visible());
+        assert!(!panel.clear.is_sensitive());
+
+        let _ = std::fs::remove_dir_all(&state);
     }
 }

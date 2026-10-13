@@ -73,15 +73,19 @@ impl Notifications {
         Ok(())
     }
 
+    /// What clients are allowed to send. `body` is the whole of it: the panel
+    /// renders text as it arrives, so markup, images, sounds and actions are
+    /// deliberately absent and clients fall back to plain text.
     fn get_capabilities(&self) -> Vec<String> {
-        vec!["body".to_string(), "persistence".to_string()]
+        vec!["body".to_string()]
     }
 
+    /// (name, vendor, version, specification version).
     fn get_server_information(&self) -> (String, String, String, String) {
         (
             "widgets".to_string(),
             "saravenpi".to_string(),
-            "1.2".to_string(),
+            env!("CARGO_PKG_VERSION").to_string(),
             "1.2".to_string(),
         )
     }
