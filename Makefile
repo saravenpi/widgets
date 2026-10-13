@@ -11,7 +11,7 @@ check:
 
 install: build
 	@mkdir -p $(PREFIX)
-	@cp target/release/$(BINS) $(PREFIX)/
+	@cp $(addprefix target/release/,$(BINS)) $(PREFIX)/
 	@echo "installed to $(PREFIX)"
 
 clean:
