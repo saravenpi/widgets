@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-10-13
+
+### Added
+
+- `statusbar`: CPU and memory readings at the right-hand end, replacing the
+  compositor name badge. Both come from `/proc` — `meminfo` for the memory in
+  use, and two `stat` samples two seconds apart for the CPU share — so the bar
+  gains no dependency. Each reading is a soft pill matching the workspace chips.
+
+### Changed
+
+- The widgets are borderless. The bar's pill, the sidebar panel and the launcher
+  drop their 1 px outlines; the panels become rounded cards (12 px) instead of
+  squared-off 4 px, and buttons become soft pills like the workspace chips.
+- `statusbar`: the pill is inset by `theme::GAP` (6 px) on every side, the same
+  measure as `gaps outer`, and the 6 px padding keeps the circular workspace
+  chips concentric with the pill's caps (pill radius = chip radius + padding).
+- `sidebar`: the panel and its toasts float `theme::GAP` off the right and
+  bottom edges instead of sitting flush against the screen.
+- `shell-common`: `theme::BAR_HEIGHT` is 44 (the 32 px pill plus a `GAP` above
+  and below it), and a new `theme::GAP` (6) names the screen-edge gap.
+
 ## [0.5.1] - 2026-10-13
 
 ### Fixed
