@@ -20,7 +20,10 @@ use crate::palette;
 /// matching `gaps outer` in the compositor config. The bar is inset by it on
 /// every side, and the sidebar and its toasts keep it off the right and bottom
 /// edges so they float the same way.
-pub const GAP: i32 = 10;
+pub const GAP: i32 = 6;
+/// `gaps inner` in the compositor config, the same measure used between the bar
+/// and the windows it sits beside.
+pub const GAP_INNER: i32 = 10;
 
 /// Height of the statusbar, and the strip it reserves at the top of the
 /// screen. A widget that docks to an edge keeps its content out of that strip

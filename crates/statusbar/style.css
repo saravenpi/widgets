@@ -8,11 +8,11 @@
    translucent fill; the chips keep their circles so the bar still reads as a
    status line). The window is `theme::BAR_HEIGHT` tall, which is this bar plus
    its margins, and that is the strip the compositor reserves. The chips stay
-   circles so the bar keeps its   status-line rhythm. */
+   circles so the bar keeps its status-line rhythm. */
 .bar {
   min-height: 32px;
-  margin: 10px;
-  padding: 0 10px;
+  margin: 6px;
+  padding: 0 6px;
   background-color: alpha(@palette_bg, 0.92);
   color: @palette_fg;
   border-radius: 0;
