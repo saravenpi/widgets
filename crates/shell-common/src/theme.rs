@@ -1,7 +1,7 @@
 //! The shared visual language of every widget.
 //!
 //! One base stylesheet defines what all three widgets agree on — transparent
-//! windows, muted text, ghost buttons, panel surfaces — so a widget's own
+//! windows, muted text, soft pill buttons, panel surfaces — so a widget's own
 //! stylesheet only has to say what makes it different. Colours come from the
 //! palette file (`~/.config/widgets/palette.css`), never from literals.
 //!
@@ -16,11 +16,17 @@ use gtk4::prelude::*;
 
 use crate::palette;
 
+/// The gap between a floating widget and the screen edge, matching `gaps
+/// outer` in the compositor config. The bar is inset by it on every side, and
+/// the sidebar and its toasts keep it off the right and bottom edges so they
+/// float the same way.
+pub const GAP: i32 = 6;
+
 /// Height of the statusbar, and the strip it reserves at the top of the
 /// screen. A widget that docks to an edge keeps its content out of that strip
 /// so it never sits underneath the bar. The bar itself is a floating pill, so
-/// this is the pill (32px) plus its top and bottom margins (4px each).
-pub const BAR_HEIGHT: i32 = 40;
+/// this is the pill (32px) plus a `GAP` above and below it.
+pub const BAR_HEIGHT: i32 = 32 + GAP * 2;
 
 /// Loaded before every widget stylesheet, which may override any of it.
 ///
@@ -34,25 +40,27 @@ window {
   font-family: "undefined";
 }
 
-/* Muted text: timestamps, hints, the compositor badge. */
+/* Muted text: timestamps, hints, secondary labels. */
 .dim {
   color: alpha(@palette_fg, 0.55);
   font-size: 11px;
 }
 
-/* Any raised area over the desktop: the sidebar panel, the launcher. */
+/* Any raised area over the desktop: the sidebar panel, the launcher. A soft
+   floating card — no border, a rounded corner, and a touch of translucency so
+   it reads as one family with the bar's pill. */
 .surface {
-  background-color: @palette_bg;
+  background-color: alpha(@palette_bg, 0.96);
   color: @palette_fg;
-  border: 1px solid alpha(@palette_fg, 0.14);
-  border-radius: 4px;
+  border-radius: 12px;
 }
 
-/* Ghost button, shared by the statusbar chips and the sidebar actions: a
-   hairline box that only fills in on hover. */
+/* Soft pill button, shared by the statusbar chips and the sidebar actions: a
+   low-contrast fill that only deepens on hover. No border — the bar's own chips
+   are borderless, so a hairline here would break the family. */
 button {
-  border: 1px solid alpha(@palette_fg, 0.14);
-  background-color: transparent;
+  border-width: 0;
+  background-color: alpha(@palette_fg, 0.08);
   background-image: none;
   box-shadow: none;
   color: @palette_fg;
@@ -61,25 +69,23 @@ button {
   padding: 2px 8px;
   min-height: 20px;
   min-width: 20px;
-  border-radius: 4px;
+  border-radius: 999px;
   /* The default theme rings a focused widget with a 2px accent-coloured
      outline. Nothing here wants that chrome; focus is shown in the palette. */
   outline: 0 solid transparent;
 }
 
 button:hover {
-  background-color: alpha(@palette_fg, 0.08);
-  border-color: alpha(@palette_fg, 0.3);
+  background-color: alpha(@palette_fg, 0.16);
 }
 
 button:focus-visible {
-  border-color: alpha(@palette_color4, 0.7);
+  background-color: alpha(@palette_color4, 0.22);
   color: @palette_color4;
 }
 
 button:disabled {
   background-color: transparent;
-  border-color: alpha(@palette_fg, 0.06);
   color: alpha(@palette_fg, 0.35);
 }
 "#;

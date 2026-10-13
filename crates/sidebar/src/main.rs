@@ -116,11 +116,13 @@ fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32, sh
     layer.exclusive_zone(false);
     layer.keyboard_mode(KeyboardMode::OnDemand);
     layer.window.set_width_request(360);
-    // Start below the statusbar (which reserves that strip for itself) instead
-    // of covering its right-hand end.
-    layer
-        .window
-        .set_margin(Edge::Top, shell_common::theme::BAR_HEIGHT);
+    // Start below the statusbar (which reserves that strip for itself) and
+    // float `theme::GAP` off the right and bottom edges, like the bar, instead
+    // of sitting flush against the screen.
+    let window = &layer.window;
+    window.set_margin(Edge::Top, shell_common::theme::BAR_HEIGHT);
+    window.set_margin(Edge::Right, shell_common::theme::GAP);
+    window.set_margin(Edge::Bottom, shell_common::theme::GAP);
 
     let handle = dbus::start(next_id);
     let built = App::build(layer.window.clone(), items, handle);

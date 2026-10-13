@@ -13,7 +13,7 @@ prints a clear message and exits without opening a window
 
 | Crate | Binary | What it does |
 | --- | --- | --- |
-| `statusbar` | `statusbar` | Top bar: workspaces via the compositor's own IPC (sway, niri, Hyprland), a clock and a compositor badge |
+| `statusbar` | `statusbar` | Top bar: workspaces via the compositor's own IPC (sway, niri, Hyprland), a clock and CPU/memory readings |
 | `sidebar` | `sidebar` | `org.freedesktop.Notifications` daemon plus an overlay list; `mod+n` toggles it |
 | `launcher` | `launcher` | Centered dmenu-style launcher over installed `.desktop` entries; `mod+space` |
 | `shell-common` | (library) | Palette CSS loading and the shared layer-window / theme boilerplate |
@@ -160,15 +160,19 @@ It follows a single Swiss-typographic scale rather than a per-widget look:
   in [undefined](https://undefined-medium.com).
 - **One accent.** `palette_color4` marks the focused workspace and the selected
   launcher row; `palette_color1` is reserved for urgency.
-- **Flat and squared off** — 4 px radii, no shadows, no gradients. The statusbar
-  is the exception: it floats as a rounded pill inset from the screen edges,
-  with circular workspace chips inside it.
+- **Floating, rounded, borderless** — no borders and no shadows anywhere. The
+  statusbar is a pill and the sidebar and launcher are rounded cards (12 px),
+  each inset from the screen edge by the same gap as `gaps outer` in the
+  compositor config (`shell_common::theme::GAP`, 6 px). The bar's circular
+  workspace chips are cut to the pill's cap: their radius is the pill radius
+  minus the bar's padding (`r_outer = r_chip + padding`), so they sit
+  concentric with it.
 - **Toasts, not requests.** A notification that arrives while the panel is shut
   shows itself in the top-right rather than waiting for `mod+n`.
 
-The statusbar reserves a 40 px strip at the top (`shell_common::theme::BAR_HEIGHT`),
-the pill plus its margins; the sidebar and the toasts start below it instead of
-covering the bar's right-hand end.
+The statusbar reserves a 44 px strip at the top (`shell_common::theme::BAR_HEIGHT`),
+the 32 px pill plus a `GAP` above and below it; the sidebar and the toasts start
+below it instead of covering the bar's right-hand end.
 
 ## Colors
 

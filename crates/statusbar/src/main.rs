@@ -1,4 +1,5 @@
 mod ipc;
+mod stats;
 
 use gtk4::glib;
 use gtk4::prelude::*;
@@ -59,21 +60,37 @@ fn activate(app: &Application) {
     clock.set_hexpand(true);
     clock.set_halign(gtk4::Align::Center);
 
-    let badge = Label::new(Some(ipc::name(compositor)));
-    badge.add_css_class("badge");
-    badge.add_css_class("dim");
-    badge.set_hexpand(true);
-    badge.set_halign(gtk4::Align::End);
+    // CPU and memory, where the compositor name used to sit: the same soft
+    // pills as the workspace chips, so both ends of the bar read as one piece.
+    let ram = Label::new(None);
+    ram.add_css_class("stat");
+    let cpu = Label::new(None);
+    cpu.add_css_class("stat");
+    let stats = gtk4::Box::new(gtk4::Orientation::Horizontal, 6);
+    stats.add_css_class("stats");
+    stats.set_hexpand(true);
+    stats.set_halign(gtk4::Align::End);
+    stats.append(&ram);
+    stats.append(&cpu);
 
     root.append(&workspaces);
     root.append(&clock);
-    root.append(&badge);
+    root.append(&stats);
     bar.window.set_child(Some(&root));
 
     update_clock(&clock);
     let ticking_clock = clock.clone();
     glib::timeout_add_seconds_local(30, move || {
         update_clock(&ticking_clock);
+        glib::ControlFlow::Continue
+    });
+
+    // The CPU share is a delta, so the first reading only sets the baseline;
+    // every tick after it reports the busy share since the previous one.
+    let mut sampler = stats::Sampler::new();
+    update_stats(&ram, &cpu, &mut sampler);
+    glib::timeout_add_seconds_local(2, move || {
+        update_stats(&ram, &cpu, &mut sampler);
         glib::ControlFlow::Continue
     });
 
@@ -114,4 +131,13 @@ fn rebuild(container: &gtk4::Box, state: &[ipc::Workspace], compositor: ipc::Com
 
 fn update_clock(label: &Label) {
     label.set_text(&chrono::Local::now().format("%H:%M").to_string());
+}
+
+fn update_stats(ram: &Label, cpu: &Label, sampler: &mut stats::Sampler) {
+    if let Some(percent) = stats::memory_percent() {
+        ram.set_text(&format!("RAM {percent}%"));
+    }
+    if let Some(percent) = sampler.cpu_percent() {
+        cpu.set_text(&format!("CPU {percent}%"));
+    }
 }

@@ -1,27 +1,26 @@
-/* Top bar: workspace chips on the left, clock in the middle, compositor badge
-   on the right. Everything it shares with the other widgets (transparent
-   window, ghost buttons, muted text, the undefined font) lives in
+/* Top bar: workspace chips on the left, clock in the middle, CPU and memory
+   readings on the right. Everything it shares with the other widgets (transparent
+   window, soft pill buttons, muted text, the undefined font) lives in
    shell_common::theme. */
 
-/* A floating pill, not a full-width strip: it is inset from every screen edge
-   and rounded past half its height, so the corners read as a capsule. The
-   window is `theme::BAR_HEIGHT` tall, which is this pill plus its margins, and
-   that is the strip the compositor reserves. */
+/* A floating pill, not a full-width strip: it is inset from the screen edges by
+   `theme::GAP` and rounded past half its height (32px tall, so an effective
+   16px radius), and the corners read as a capsule. The window is
+   `theme::BAR_HEIGHT` tall, which is this pill plus its margins, and that is the
+   strip the compositor reserves. No border: the fill alone separates it from the
+   wallpaper. */
 .bar {
   min-height: 32px;
-  margin: 4px 6px;
+  margin: 6px;
   padding: 0 6px;
   background-color: alpha(@palette_bg, 0.92);
   color: @palette_fg;
-  border: 1px solid alpha(@palette_fg, 0.12);
   border-radius: 999px;
 }
 
-/* Chips stay plain type until they mean something, so the accent keeps its
-   weight: a filled circle for the focused workspace, a ring for an urgent one. */
-.workspaces {
-  margin-left: 6px;
-}
+/* The 6px padding is chosen so the chips sit concentric with the pill's caps:
+   the pill radius (16) equals the chip radius (10, a 20px circle) plus the
+   padding. Nothing else may add to it — an extra margin would push them off. */
 
 button.ws {
   border: none;
@@ -61,9 +60,19 @@ button.ws.urgent:hover {
   color: @palette_fg;
 }
 
-.badge {
-  margin-right: 10px;
+/* RAM and CPU, at the right-hand end: the same soft pill as the workspace
+   chips, so the two ends of the bar read as one material. */
+.stats {
+  margin-left: 6px;
+}
+
+.stat {
+  min-height: 20px;
+  padding: 0 8px;
+  background-color: alpha(@palette_fg, 0.1);
+  border-radius: 999px;
   font-size: 10px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: alpha(@palette_fg, 0.7);
 }

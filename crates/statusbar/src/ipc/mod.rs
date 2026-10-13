@@ -32,15 +32,6 @@ pub fn detect() -> Compositor {
     }
 }
 
-pub fn name(compositor: Compositor) -> &'static str {
-    match compositor {
-        Compositor::Sway => "sway",
-        Compositor::Niri => "niri",
-        Compositor::Hyprland => "hyprland",
-        Compositor::Unknown => "wayland",
-    }
-}
-
 pub fn start(compositor: Compositor, tx: Sender<Vec<Workspace>>) {
     match compositor {
         Compositor::Sway => drop(std::thread::spawn(move || sway::run(tx))),
