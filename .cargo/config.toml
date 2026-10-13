@@ -1,0 +1,17 @@
+# Every musl Rust target defaults to `+crt-static` (RFC 1721), which asks the
+# linker for the *static* build of the C runtime and of every system library.
+# GTK4 and gtk4-layer-shell only ship shared libraries on Alpine and Void, so
+# that link fails with `cannot find -lgtk-4` — the "install the static version
+# of the libraries" error, which no apk package can satisfy. Turning the
+# default off links the system libraries dynamically, exactly like the glibc
+# targets already do.
+#
+# The `cfg` form covers every musl target on every architecture — x86_64,
+# aarch64, armv7, riscv64 — and never applies to glibc, so gnu builds are
+# untouched. It also matches the host when no `--target` is passed, which is
+# what a native Alpine build does.
+#
+# Setting `CARGO_ENCODED_RUSTFLAGS` or `RUSTFLAGS` still wins over this file,
+# so a fully static build stays opt-in.
+[target.'cfg(target_env = "musl")']
+rustflags = ["-C", "target-feature=-crt-static"]
