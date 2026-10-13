@@ -6,6 +6,24 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-13
+
+### Added
+
+- Builds and runs on musl: the workspace compiles for
+  `x86_64-unknown-linux-musl` (Alpine) with `gtk4.0-dev` +
+  `gtk4-layer-shell-dev`, alongside the glibc builds.
+
+### Changed
+
+- `shell-common`: a single `theme::init(<widget style.css>)` per widget builds
+  one stylesheet document out of the palette, a shared base sheet
+  (`shell_common::theme::BASE_CSS`: transparent windows, panel surfaces, ghost
+  buttons, muted text) and the widget's own CSS, so the three widgets share one
+  visual language instead of repeating the same rules.
+- Widget stylesheets live next to their crates (`crates/<widget>/style.css`).
+- Every crate takes its version from the workspace (`version.workspace = true`).
+
 ## [0.1.0] - 2026-10-13
 
 ### Added
