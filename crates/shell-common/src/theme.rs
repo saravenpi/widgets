@@ -16,11 +16,11 @@ use gtk4::prelude::*;
 
 use crate::palette;
 
-/// The gap between a floating widget and the screen edge, matching `gaps
-/// outer` in the compositor config. The bar is inset by it on every side, and
-/// the sidebar and its toasts keep it off the right and bottom edges so they
-/// float the same way.
-pub const GAP: i32 = 6;
+/// The gap around a floating widget and the window rectangles it sits inside,
+/// matching `gaps outer` in the compositor config. The bar is inset by it on
+/// every side, and the sidebar and its toasts keep it off the right and bottom
+/// edges so they float the same way.
+pub const GAP: i32 = 10;
 
 /// Height of the statusbar, and the strip it reserves at the top of the
 /// screen. A widget that docks to an edge keeps its content out of that strip
@@ -46,20 +46,20 @@ window {
   font-size: 11px;
 }
 
-/* Any raised area over the desktop: the sidebar panel, the launcher. A soft
-   floating card — no border, squared-off corners, and a touch of translucency so
-   it reads as one family with the bar. */
+/* Any raised area over the desktop: the sidebar panel, the launcher. A flat
+   floating card — no border and no rounded corners, so the three widgets read as
+   one hard-edged system rather than a family of pills. */
 .surface {
   background-color: alpha(@palette_bg, 0.96);
   color: @palette_fg;
   border-radius: 0;
 }
 
-/* Soft pill button, shared by the statusbar chips and the sidebar actions: a
-   low-contrast fill that only deepens on hover. No border — the bar's own chips
-   are borderless, so a hairline here would break the family. */
+/* Ghost button, shared by the statusbar chips and the sidebar actions: a
+   low-contrast fill that only deepens on hover. No border — a hairline here
+   would fight the modules for pixels when they sit next to the bar. */
 button {
-  border-width: 0;
+  border: none;
   background-color: alpha(@palette_fg, 0.08);
   background-image: none;
   box-shadow: none;
@@ -69,7 +69,6 @@ button {
   padding: 2px 8px;
   min-height: 20px;
   min-width: 20px;
-  border-radius: 999px;
   /* The default theme rings a focused widget with a 2px accent-coloured
      outline. Nothing here wants that chrome; focus is shown in the palette. */
   outline: 0 solid transparent;

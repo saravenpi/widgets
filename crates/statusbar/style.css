@@ -8,11 +8,11 @@
    translucent fill; the chips keep their circles so the bar still reads as a
    status line). The window is `theme::BAR_HEIGHT` tall, which is this bar plus
    its margins, and that is the strip the compositor reserves. The chips stay
-   circles so the bar keeps its status-line rhythm. */
+   circles so the bar keeps its   status-line rhythm. */
 .bar {
   min-height: 32px;
-  margin: 6px;
-  padding: 0 6px;
+  margin: 10px;
+  padding: 0 10px;
   background-color: alpha(@palette_bg, 0.92);
   color: @palette_fg;
   border-radius: 0;
@@ -56,14 +56,13 @@ button.ws.urgent:hover {
 /* RAM and CPU, at the right-hand end: the same chips as the workspace ones, so
    the two ends of the bar read as one material. */
 .stats {
-  margin-left: 6px;
+  margin-left: 10px;
 }
 
 .stat {
   min-height: 20px;
   padding: 0 8px;
   background-color: alpha(@palette_fg, 0.1);
-  border-radius: 999px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.02em;

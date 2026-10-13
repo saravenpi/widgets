@@ -3,13 +3,13 @@
    The panel is a floating card with squared-off corners, matching the bar. */
 
 .popup {
-  padding: 8px 0;
+  padding: 10px 0;
 }
 
 /* The query line is the panel's top rule: no field chrome, just type. The
    theme's own `entry:focus-within` paints a 2px accent outline inside a focused
    field, which reads as a strange border around the query line; focus is shown
-   on the rule below instead. */
+   inline as a painted underline instead of a hairline. */
 entry {
   min-height: 44px;
   padding: 0 16px;
@@ -17,7 +17,7 @@ entry {
   color: @palette_fg;
   background-color: transparent;
   background-image: none;
-  border-width: 0;
+  border: none;
   border-bottom: 1px solid alpha(@palette_fg, 0.14);
   box-shadow: none;
   outline: 0 solid transparent;

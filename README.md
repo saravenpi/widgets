@@ -160,18 +160,19 @@ It follows a single Swiss-typographic scale rather than a per-widget look:
   in [undefined](https://undefined-medium.com).
 - **One accent.** `palette_color4` marks the focused workspace and the selected
   launcher row; `palette_color1` is reserved for urgency.
-- **Floating, squared-off, borderless** — no borders and no shadows anywhere. The
-  statusbar is a floating bar and the sidebar and launcher are floating cards, all
-  squared-off (radius 0), each inset from the screen edge by the same gap as
-  `gaps outer` in the compositor config (`shell_common::theme::GAP`, 6 px). The
-  bar still keeps its circles — the workspace chips and the RAM/CPU pills — so it
-  reads as a status line rather than a plain strip.
+- **Floating, squared-off, borderless** — no borders and no shadows anywhere, and
+  nothing inside the widgets is rounded: the bar is a floating bar, the sidebar
+  and launcher are floating cards, and the workspace chips, the clock, the
+  compositor, the RAM and the CPU readings are all flat pieces. Every widget keeps
+  its modules on a hard grid, square off everything, and aligns to the compositor's
+  gaps (`shell_common::theme::GAP`) on the screen edge.
 - **Toasts, not requests.** A notification that arrives while the panel is shut
   shows itself in the top-right rather than waiting for `mod+n`.
 
-The statusbar reserves a 44 px strip at the top (`shell_common::theme::BAR_HEIGHT`),
-the 32 px pill plus a `GAP` above and below it; the sidebar and the toasts start
-below it instead of covering the bar's right-hand end.
+The statusbar reserves a 52 px strip at the top (`shell_common::theme::BAR_HEIGHT`),
+the 32 px bar plus a `GAP` above and below it (matching `gaps outer` in the compositor
+config); the sidebar and the toasts start below it instead of covering the bar's
+right-hand end.
 
 ## Colors
 

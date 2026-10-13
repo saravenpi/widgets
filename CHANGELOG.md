@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2026-10-13
+
+### Changed
+
+- Aligned the widgets to the compositor's gaps: the statusbar, sidebar and toasts
+  are now inset by `gaps outer` (10 px) on every exposed screen edge, the same
+  measure as the window rectangles they sit beside.
+- Squared off everything inside the widgets as well as their windows: the
+  statusbar has no rounded corners, the workspace chips, the clock and the
+  compositor, RAM and CPU readouts are all flat (no pill radius), and the sidebar
+  and its toasts have squared-off cards.
+- Fixed a quadrant mismatch in the sidebar window driver: the panel's own
+  top margin was being shadowed by the shared expansion, so a driver that only
+  set `the top margin` and expected the rest to be cleared came out off-center.
+  The sidebars and toasts now set all four margins explicitly, and the panel keeps
+  the `BAR_HEIGHT` gap above it instead of sitting in the bar's strip.
+
 ## [0.6.2] - 2026-10-13
 
 ### Changed
