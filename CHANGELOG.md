@@ -6,6 +6,52 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-13
+
+### Fixed
+
+- `sidebar`: starting the daemon through the compositor binding left the panel
+  hidden, so the first `mod+n` after login appeared to do nothing. The binding
+  runs `sidebar toggle`, which started the daemon with no window presented;
+  only a second press revealed the panel. A `toggle` that has to start the
+  daemon now presents it, and the two entry points mean different things:
+  `sidebar toggle` starts the daemon *and* opens the panel, a bare `sidebar`
+  primes the daemon without covering the screen.
+- `statusbar`: the Hyprland workspace list never followed a workspace change.
+  Events on `.socket2.sock` are written in lower case (`workspace>>2`) while
+  the client matched upper-case literals (`"WORKSPACE"`, `"WORKSPACEV2"`, …),
+  so no event was ever recognised: the bar drew the workspaces it saw at
+  startup and then stood still. The match is now case-insensitive over the
+  workspace-related events in Hyprland's own event table.
+- `statusbar`: the sway workspace list could stop updating after a workspace
+  switch. Replies and subscribed events share the i3 IPC socket and the client
+  read whichever frame came next, so an event arriving while a reply was
+  pending was parsed as a workspace list and killed the reader thread, with
+  nothing on screen to say so. Frames are now classified by the event bit.
+- `sidebar`: a stale PID file could make `toggle` signal an unrelated process.
+  Liveness alone was checked and PIDs are recycled; the file is now trusted
+  only while `/proc/<pid>/comm` still names the widget.
+
+### Changed
+
+- `shell-common`: one single-instance guard (`shell_common::instance`) behind
+  the sidebar and the statusbar, replacing the sidebar's private PID-file
+  logic. `statusbar` is now a singleton, so a compositor that starts it twice
+  keeps one bar instead of two in the same exclusive zone.
+- The three widgets were redesigned on one Swiss-typographic scale: a single
+  spacing scale (4/8/12/16/24), hairlines instead of boxes, type size and
+  weight instead of fills for hierarchy, one accent for focus and one for
+  urgency, and flat squared-off surfaces.
+  `shell_common::theme::BAR_HEIGHT` now holds the strip the bar reserves, so
+  the sidebar starts below it instead of covering it.
+- `sidebar`: `GetCapabilities` advertises only `body` — the invented
+  `persistence` capability is gone — and `GetServerInformation` reports the
+  crate version.
+- Tests now cover what used to be checked by eye: the sidebar panel's list and
+  actions (run against a real GTK display), the sway frame reader, the
+  Hyprland event filter, the niri event application, and the new
+  single-instance guard.
+
 ## [0.2.2] - 2026-10-13
 
 ### Fixed
