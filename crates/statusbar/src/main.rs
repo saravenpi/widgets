@@ -5,9 +5,22 @@ use gtk4::prelude::*;
 use gtk4::{Application, Label};
 use shell_common::layer::{ensure_supported, LayerWindow};
 
+/// The name this widget claims in `$XDG_RUNTIME_DIR` while the bar lives.
+const WIDGET: &str = "statusbar";
+
 fn main() {
     if std::env::args().skip(1).any(|arg| arg == "--version") {
-        println!("{} {}", env!("CARGO_PKG_NAME"), env!("CARGO_PKG_VERSION"));
+        println!(
+            "{} {}",
+            env!("CARGO_PKG_NAME"),
+            env!("CARGO_PKG_VERSION")
+        );
+        return;
+    }
+    // The bar is a singleton: a compositor that runs it twice (a reload, a
+    // stray `exec`) would otherwise stack two bars in the same exclusive zone.
+    if let Some(pid) = shell_common::instance::claim(WIDGET) {
+        eprintln!("statusbar: already running (pid {pid}), leaving it alone");
         return;
     }
     let app = Application::builder()
@@ -26,7 +39,7 @@ fn activate(app: &Application) {
     let bar = LayerWindow::new(app);
     bar.anchors(true, true, true, false);
     bar.exclusive_zone(true);
-    bar.window.set_height_request(30);
+    bar.window.set_height_request(shell_common::theme::BAR_HEIGHT);
 
     let compositor = ipc::detect();
     let root = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
@@ -76,6 +89,7 @@ fn activate(app: &Application) {
 
     bar.window.present();
 }
+
 
 fn rebuild(container: &gtk4::Box, state: &[ipc::Workspace], compositor: ipc::Compositor) {
     while let Some(child) = container.first_child() {

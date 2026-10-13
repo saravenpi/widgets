@@ -96,15 +96,69 @@ fn event_socket() -> Option<PathBuf> {
     )
 }
 
+/// Whether an event line can change which workspaces exist, or which one is
+/// focused.
+///
+/// Hyprland writes event names in lower case on `.socket2.sock`
+/// (`workspace>>2`), and the list below is the workspace-related subset of the
+/// event table at https://wiki.hypr.land/IPC/ (checked against v0.41.0). The
+/// comparison lowercases the name rather than trusting one spelling.
+///
+/// Window events are deliberately absent: the bar only draws workspace names,
+/// focus and urgency, so a window opening or closing is no reason to go back to
+/// `hyprctl`.
 fn relevant(line: &str) -> bool {
-    let event = line.split(">>").next().unwrap_or("");
+    let event = line.split(">>").next().unwrap_or("").to_ascii_lowercase();
     matches!(
-        event,
-        "WORKSPACE"
-            | "WORKSPACEV2"
-            | "CREATEWORKSPACE"
-            | "CREATEWORKSPACEV2"
-            | "DESTROYWORKSPACE"
-            | "DESTROYWORKSPACEV2"
+        event.as_str(),
+        "workspace"
+            | "workspacev2"
+            | "createworkspace"
+            | "createworkspacev2"
+            | "destroyworkspace"
+            | "destroyworkspacev2"
+            | "moveworkspace"
+            | "moveworkspacev2"
+            | "renameworkspace"
+            | "activespecial"
+            | "focusedmon"
+            | "monitoradded"
+            | "monitoraddedv2"
+            | "monitorremoved"
+            | "urgent"
     )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn only_workspace_events_trigger_a_requery() {
+        // Exactly the names Hyprland sends on `.socket2.sock`: lower case.
+        for line in [
+            "workspace>>3",
+            "workspacev2>>3,name",
+            "createworkspacev2>>4,4",
+            "destroyworkspace>>2",
+            "moveworkspace>>2,DP-1",
+            "renameworkspace>>2,web",
+            "activespecial>>special,DP-1",
+            "focusedmon>>DP-1,2",
+            "monitorremoved>>DP-2",
+            "urgent>>abc123",
+        ] {
+            assert!(relevant(line), "{line} should trigger a refresh");
+        }
+
+        for line in [
+            "openwindow>>abc,1,kitty,title",
+            "closewindow>>abc",
+            "activewindow>>kitty,title",
+            "changefloatingmode>>abc,1",
+            "",
+        ] {
+            assert!(!relevant(line), "{line} should be ignored");
+        }
+    }
 }
