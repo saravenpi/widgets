@@ -3,6 +3,7 @@ mod ipc;
 use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::{Application, Label};
+use shell_common::app::run as run_app;
 use shell_common::layer::{ensure_supported, LayerWindow};
 
 /// The name this widget claims in `$XDG_RUNTIME_DIR` while the bar lives.
@@ -27,7 +28,7 @@ fn main() {
         .application_id("dev.saravenpi.Statusbar")
         .build();
     app.connect_activate(activate);
-    std::process::exit(app.run().into());
+    std::process::exit(run_app(&app, env!("CARGO_PKG_NAME")).into());
 }
 
 fn activate(app: &Application) {

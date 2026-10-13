@@ -13,6 +13,7 @@ use gtk4::{
     SelectionMode,
 };
 use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
+use shell_common::app::run as run_app;
 use shell_common::layer::{ensure_supported, LayerWindow};
 use shell_common::theme;
 
@@ -31,7 +32,7 @@ fn main() {
         .build();
     let shared = apps.clone();
     application.connect_activate(move |app| activate(app, &shared));
-    let _ = application.run();
+    let _ = run_app(&application, env!("CARGO_PKG_NAME"));
 }
 
 fn activate(application: &Application, apps: &Rc<Vec<App>>) {

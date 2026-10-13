@@ -7,6 +7,7 @@ use std::rc::Rc;
 use gtk4::prelude::*;
 use gtk4::{gdk, glib, Application, ApplicationWindow, EventControllerKey};
 use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
+use shell_common::app::run as run_app;
 use shell_common::{instance, layer::LayerWindow};
 
 use dbus::Event;
@@ -92,7 +93,7 @@ fn run_daemon(show: bool) {
         .application_id("dev.saravenpi.Sidebar")
         .build();
     application.connect_activate(move |app| activate(app, items.clone(), next_id, show));
-    let code = application.run();
+    let code = run_app(&application, env!("CARGO_PKG_NAME"));
     instance::release(WIDGET);
     std::process::exit(code.into());
 }
