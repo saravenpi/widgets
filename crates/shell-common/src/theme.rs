@@ -51,11 +51,19 @@ button {
   min-height: 20px;
   min-width: 20px;
   border-radius: 4px;
+  /* The default theme rings a focused widget with a 2px accent-coloured
+     outline. Nothing here wants that chrome; focus is shown in the palette. */
+  outline: 0 solid transparent;
 }
 
 button:hover {
   background-color: alpha(@palette_fg, 0.08);
   border-color: alpha(@palette_fg, 0.3);
+}
+
+button:focus-visible {
+  border-color: alpha(@palette_color4, 0.7);
+  color: @palette_color4;
 }
 
 button:disabled {

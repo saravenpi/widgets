@@ -6,7 +6,10 @@
   padding: 6px 0;
 }
 
-/* The query line is the panel's top rule: no field chrome, just type. */
+/* The query line is the panel's top rule: no field chrome, just type. The
+   theme's own `entry:focus-within` paints a 2px accent outline inside a focused
+   field, which reads as a strange border around the query line; focus is shown
+   on the rule below instead. */
 entry {
   min-height: 44px;
   padding: 0 16px;
@@ -17,6 +20,12 @@ entry {
   border-width: 0;
   border-bottom: 1px solid alpha(@palette_fg, 0.14);
   box-shadow: none;
+  outline: 0 solid transparent;
+}
+
+/* The line under the query is the focus indicator. */
+entry:focus-within {
+  border-bottom-color: @palette_color4;
 }
 
 list {
