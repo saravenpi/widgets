@@ -1,0 +1,54 @@
+window {
+  background-color: transparent;
+}
+
+.popup {
+  background-color: @palette_bg;
+  border-width: 1px;
+  border-style: solid;
+  border-color: @palette_color8;
+  border-radius: 8px;
+}
+
+entry {
+  min-height: 42px;
+  padding: 0 14px;
+  font-size: 15px;
+  color: @palette_fg;
+  background-color: transparent;
+  background-image: none;
+  border-width: 0;
+  box-shadow: none;
+}
+
+list {
+  background-color: transparent;
+  background-image: none;
+  border-width: 0;
+}
+
+row {
+  padding: 7px 14px;
+  background-color: transparent;
+  background-image: none;
+  color: @palette_fg;
+  font-size: 13px;
+}
+
+row:hover {
+  background-color: alpha(@palette_fg, 0.08);
+}
+
+row:selected {
+  background-color: @palette_color4;
+  color: @palette_bg;
+}
+
+row:selected .dim {
+  color: alpha(@palette_bg, 0.75);
+}
+
+.dim {
+  color: @palette_color8;
+  font-size: 12px;
+}

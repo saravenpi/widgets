@@ -1,0 +1,12 @@
+# facile discovers this file to install widgets from source.
+# One repo, several binaries: bins lists them all and bin names the
+# primary, the one facile verifies and shows in list output.
+
+name = "widgets"
+summary = "Wayland desktop widgets: statusbar, sidebar and launcher"
+repo = "saravenpi/widgets"
+branch = "main"
+build = "rust"
+srcSubdir = "."
+bin = "statusbar"
+bins = ["statusbar", "sidebar", "launcher"]

@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/shell-common",
+    "crates/statusbar",
+    "crates/sidebar",
+    "crates/launcher",
+]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+gtk4 = { version = "0.11", features = ["v4_10"] }
+gtk4-layer-shell = "0.8"
+shell-common = { path = "crates/shell-common" }
+
+[profile.release]
+lto = true
+strip = true

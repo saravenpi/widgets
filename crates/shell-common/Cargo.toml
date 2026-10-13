@@ -1,0 +1,8 @@
+[package]
+name = "shell-common"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gtk4.workspace = true
+gtk4-layer-shell.workspace = true
