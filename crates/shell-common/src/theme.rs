@@ -4,6 +4,15 @@
 //! windows, muted text, ghost buttons, panel surfaces — so a widget's own
 //! stylesheet only has to say what makes it different. Colours come from the
 //! palette file (`~/.config/widgets/palette.css`), never from literals.
+//!
+//! [`init`] loads the three layers into a single provider and then watches the
+//! palette file. `palette sync` rewrites that file whenever the wallpaper or the
+//! palette changes, so a running widget restyles itself instead of waiting for a
+//! restart.
+
+use std::cell::RefCell;
+
+use gtk4::prelude::*;
 
 use crate::palette;
 
@@ -73,18 +82,53 @@ button:disabled {
 }
 "#;
 
+thread_local! {
+    /// The palette file monitor, kept alive for the life of the process.
+    ///
+    /// `FileMonitor` stops watching when it is dropped, and nothing else holds
+    /// a reference to it: the widgets live for a whole session, so the slot
+    /// lives as long as the process does.
+    static PALETTE_MONITOR: RefCell<Option<gtk4::gio::FileMonitor>> = const { RefCell::new(None) };
+}
+
 /// Style a widget: palette, then the shared base, then its own stylesheet.
 ///
 /// The three layers go into a single provider, so the widget sheet always wins
-/// over the base and both win over nothing else.
-pub fn init(widget_css: &str) {
-    let document = format!(
-        "{}\n{}\n{}",
-        palette::palette_css(),
-        BASE_CSS,
-        widget_css
+/// over the base and both win over nothing else. The provider is then tied to
+/// `~/.config/widgets/palette.css`: when the file changes, the same document is
+/// rebuilt from the new palette and loaded back into the same provider, which
+/// restyles every widget on the display without a restart.
+pub fn init(widget_css: &'static str) {
+    let provider = palette::provider(&document(widget_css));
+    watch(provider, widget_css);
+}
+
+/// The full stylesheet: the palette first, then the base, then the widget's.
+fn document(widget_css: &str) -> String {
+    format!("{}\n{}\n{}", palette::palette_css(), BASE_CSS, widget_css)
+}
+
+/// Reload the palette on every change to `~/.config/widgets/palette.css`.
+///
+/// A missing file is not an error: `palette::palette_css` answers with the
+/// built-in fallback until the file appears, and the monitor reports the
+/// creation, so a widget started before its first `palette sync` still picks
+/// the colours up.
+fn watch(provider: gtk4::CssProvider, widget_css: &'static str) {
+    let Some(path) = palette::palette_file() else {
+        return;
+    };
+    let monitor = gtk4::gio::File::for_path(path).monitor_file(
+        gtk4::gio::FileMonitorFlags::NONE,
+        gtk4::gio::Cancellable::NONE,
     );
-    palette::load(&document);
+    let Ok(monitor) = monitor else {
+        return;
+    };
+    monitor.connect_changed(move |_, _, _, _| {
+        provider.load_from_data(&document(widget_css));
+    });
+    PALETTE_MONITOR.with(|slot| *slot.borrow_mut() = Some(monitor));
 }
 
 #[cfg(test)]
@@ -154,5 +198,19 @@ mod tests {
         assert!(!parse_errors("window { colour: red; }").is_empty());
         assert!(!parse_errors("window { background-color: notacolor; }").is_empty());
         assert!(parse_errors("window { background-color: #19120c; }").is_empty());
+    }
+
+    /// The reload path rebuilds the whole document; the widget layer has to be
+    /// in there, or a palette change would quietly drop a widget's own rules.
+    #[test]
+    fn document_layers_are_all_present() {
+        let widget = ".statusbar { color: @palette_fg; }";
+        let full = document(widget);
+        assert!(full.contains(BASE_CSS), "the shared base is missing");
+        assert!(full.ends_with(widget), "the widget sheet is missing");
+        assert!(
+            full.contains("palette_bg"),
+            "the palette layer is missing"
+        );
     }
 }

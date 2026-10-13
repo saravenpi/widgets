@@ -175,6 +175,11 @@ keep the widgets running, so palette is optional but recommended:
 palette sync
 ```
 
+The widgets watch that file, so a running bar, sidebar or launcher restyles
+itself the moment `palette sync` rewrites it — no restart, no compositor reload
+required. A file that does not exist yet is watched too, so a widget started
+before its first sync picks the colors up when it appears.
+
 ## Running
 
 Start the bar from your compositor; all three binaries live in `~/.local/bin`.

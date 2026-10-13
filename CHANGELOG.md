@@ -6,6 +6,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Every widget now hot-reloads the palette. `shell-common` keeps the
+  `CssProvider` it styles the display with and watches
+  `~/.config/widgets/palette.css` through a `GFileMonitor`; when `palette sync`
+  rewrites the file the same provider is loaded with the rebuilt document and
+  every open widget restyles in place, with no restart. A palette file that
+  does not exist yet is still watched, so a widget started before its first
+  `palette sync` picks the colors up as soon as the file appears.
+
 ## [0.3.1] - 2026-10-13
 
 ### Fixed
