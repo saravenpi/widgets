@@ -207,6 +207,7 @@ spawn-at-startup "sh" "-c" "$HOME/.local/bin/statusbar"
 
 # Hyprland  ~/.config/hypr/hyprland.conf
 exec-once = $HOME/.local/bin/statusbar
+exec-once = $HOME/.local/bin/sidebar   # owns org.freedesktop.Notifications
 bind = $mainMod, N, exec, $HOME/.local/bin/sidebar toggle
 bind = $mainMod, Space, exec, $HOME/.local/bin/launcher
 ```
@@ -223,6 +224,12 @@ as stale and taken over, so a crash never locks the bar out of its own slot.
 Workspaces come from the compositor's own IPC and follow it live: the event
 stream for **sway** (i3 protocol) and **niri**, and `.socket2.sock` for
 **Hyprland**. Clicking a chip focuses that workspace through the same IPC.
+
+The right-hand end carries the CPU and memory load as two pills. Memory is
+`MemTotal - MemAvailable` from `/proc/meminfo`; the CPU share is the busy delta
+between two `/proc/stat` samples two seconds apart. Both are read from `/proc`
+with no dependency, and a reading that cannot be taken leaves its pill empty
+rather than showing a stale number.
 
 ### The sidebar
 
