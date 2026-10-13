@@ -160,13 +160,12 @@ It follows a single Swiss-typographic scale rather than a per-widget look:
   in [undefined](https://undefined-medium.com).
 - **One accent.** `palette_color4` marks the focused workspace and the selected
   launcher row; `palette_color1` is reserved for urgency.
-- **Floating, rounded, borderless** — no borders and no shadows anywhere. The
-  statusbar is a pill and the sidebar and launcher are rounded cards (12 px),
-  each inset from the screen edge by the same gap as `gaps outer` in the
-  compositor config (`shell_common::theme::GAP`, 6 px). The bar's circular
-  workspace chips are cut to the pill's cap: their radius is the pill radius
-  minus the bar's padding (`r_outer = r_chip + padding`), so they sit
-  concentric with it.
+- **Floating, squared-off, borderless** — no borders and no shadows anywhere. The
+  statusbar is a floating bar and the sidebar and launcher are floating cards, all
+  squared-off (radius 0), each inset from the screen edge by the same gap as
+  `gaps outer` in the compositor config (`shell_common::theme::GAP`, 6 px). The
+  bar still keeps its circles — the workspace chips and the RAM/CPU pills — so it
+  reads as a status line rather than a plain strip.
 - **Toasts, not requests.** A notification that arrives while the panel is shut
   shows itself in the top-right rather than waiting for `mod+n`.
 

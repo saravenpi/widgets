@@ -47,12 +47,12 @@ window {
 }
 
 /* Any raised area over the desktop: the sidebar panel, the launcher. A soft
-   floating card — no border, a rounded corner, and a touch of translucency so
-   it reads as one family with the bar's pill. */
+   floating card — no border, squared-off corners, and a touch of translucency so
+   it reads as one family with the bar. */
 .surface {
   background-color: alpha(@palette_bg, 0.96);
   color: @palette_fg;
-  border-radius: 12px;
+  border-radius: 0;
 }
 
 /* Soft pill button, shared by the statusbar chips and the sidebar actions: a

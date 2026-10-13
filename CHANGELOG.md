@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-10-13
+
+### Changed
+
+- Flipped the shared design back to squared-off, floating cards: the bar, the
+  sidebar panel and the launcher panel now have no border and no rounded
+  corners (radius 0), but they stay floating at `theme::GAP` off the screen edge.
+  The workspace chips and the RAM/CPU pills keep their circles, so the bar still
+  reads as a status line.
+
 ## [0.6.1] - 2026-10-13
 
 ### Changed

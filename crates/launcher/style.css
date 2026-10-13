@@ -1,10 +1,9 @@
 /* Centered launcher. `.surface` (shell_common::theme) provides the panel
-   background and radius; only the search field and the rows are specific to
-   this widget. The vertical padding is at least the surface radius so a
-   selected row can never square off the panel's rounded bottom corners. */
+   background; only the search field and the rows are specific to this widget.
+   The panel is a floating card with squared-off corners, matching the bar. */
 
 .popup {
-  padding: 12px 0;
+  padding: 8px 0;
 }
 
 /* The query line is the panel's top rule: no field chrome, just type. The

@@ -1,31 +1,25 @@
 /* Top bar: workspace chips on the left, clock in the middle, CPU and memory
    readings on the right. Everything it shares with the other widgets (transparent
-   window, soft pill buttons, muted text, the undefined font) lives in
+   window, ghost buttons, muted text, the undefined font) lives in
    shell_common::theme. */
 
-/* A floating pill, not a full-width strip: it is inset from the screen edges by
-   `theme::GAP` and rounded past half its height (32px tall, so an effective
-   16px radius), and the corners read as a capsule. The window is
-   `theme::BAR_HEIGHT` tall, which is this pill plus its margins, and that is the
-   strip the compositor reserves. No border: the fill alone separates it from the
-   wallpaper. */
+/* A floating bar, not a full-width strip: it is inset from the screen edges by
+   `theme::GAP`, has no border and squared-off corners (the bar itself is a
+   translucent fill; the chips keep their circles so the bar still reads as a
+   status line). The window is `theme::BAR_HEIGHT` tall, which is this bar plus
+   its margins, and that is the strip the compositor reserves. The chips stay
+   circles so the bar keeps its status-line rhythm. */
 .bar {
   min-height: 32px;
   margin: 6px;
   padding: 0 6px;
   background-color: alpha(@palette_bg, 0.92);
   color: @palette_fg;
-  border-radius: 999px;
+  border-radius: 0;
 }
 
-/* The 6px padding is chosen so the chips sit concentric with the pill's caps:
-   the pill radius (16) equals the chip radius (10, a 20px circle) plus the
-   padding. Nothing else may add to it — an extra margin would push them off. */
-
 button.ws {
-  border: none;
   background-color: alpha(@palette_fg, 0.1);
-  border-radius: 999px;
   min-width: 20px;
   min-height: 20px;
   padding: 0;
@@ -35,7 +29,6 @@ button.ws {
 }
 
 button.ws:hover {
-  border: none;
   background-color: alpha(@palette_fg, 0.18);
   color: @palette_fg;
 }
@@ -60,8 +53,8 @@ button.ws.urgent:hover {
   color: @palette_fg;
 }
 
-/* RAM and CPU, at the right-hand end: the same soft pill as the workspace
-   chips, so the two ends of the bar read as one material. */
+/* RAM and CPU, at the right-hand end: the same chips as the workspace ones, so
+   the two ends of the bar read as one material. */
 .stats {
   margin-left: 6px;
 }

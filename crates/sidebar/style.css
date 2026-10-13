@@ -1,7 +1,7 @@
 /* Right-hand notification panel. `.surface` (shell_common::theme) gives it the
-   palette background and the rounded corner; the panel only sets its padding.
-   It floats — the window keeps `theme::GAP` off the right and bottom edges — so
-   it reads like the bar rather than a strip flush against the screen. */
+   palette background; the panel only sets its padding. It floats — the window
+   keeps `theme::GAP` off the right and bottom edges — so it reads like the bar
+   rather than a strip flush against the screen. */
 
 .panel {
   padding: 14px 16px;
@@ -77,7 +77,6 @@
   background-color: alpha(@palette_bg, 0.96);
   color: @palette_fg;
   border-left: 3px solid @palette_color4;
-  border-radius: 12px;
 }
 
 .toast.urgent {
