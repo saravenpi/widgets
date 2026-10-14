@@ -121,6 +121,34 @@ mod tests {
 
     use super::*;
 
+    /// A pill wired to a real popup, with counters standing in for a control's
+    /// `show` and `refresh` so the test can tell how often each ran.
+    fn wired_pill() -> (gtk4::Button, Label, Popup, Rc<Cell<u32>>) {
+        let application = gtk4::Application::builder()
+            .application_id("dev.saravenpi.ControlPillTest")
+            .build();
+        application
+            .register(None::<&gio::Cancellable>)
+            .expect("register the test application");
+
+        let popup = Popup::new(&application);
+        let label = Label::new(None);
+        let refreshes = Rc::new(Cell::new(0u32));
+        let counter = refreshes.clone();
+        let button = pill(
+            icons::Icon::Battery,
+            &label,
+            &popup,
+            |popup| crate::popup::message(popup, "Battery", "50"),
+            move |label| {
+                let refreshes = counter.get() + 1;
+                counter.set(refreshes);
+                label.set_text(&format!("refresh {refreshes}"));
+            },
+        );
+        (button, label, popup, refreshes)
+    }
+
     /// Clicking a pill has to open the control's popup and pull its label back up
     /// to date. Both once went missing: the handler dropped the popup instead of
     /// showing it, so every control lost its popup, and the label the tickers
@@ -135,44 +163,16 @@ mod tests {
             eprintln!("statusbar: no display, skipping the control pill test");
             return;
         }
-        let application = gtk4::Application::builder()
-            .application_id("dev.saravenpi.ControlPillTest")
-            .build();
-        application
-            .register(None::<&gio::Cancellable>)
-            .expect("register the test application");
+        let (button, label, popup, refreshes) = wired_pill();
 
-        let popup = Popup::new(&application);
-        let label = Label::new(None);
-
-        let reads = Rc::new(Cell::new(0u32));
-        let read_count = reads.clone();
-        let button = pill(
-            icons::Icon::Battery,
-            &label,
-            &popup,
-            |popup| crate::popup::message(popup, "Battery", "50"),
-            move |label| {
-                let reads = read_count.get() + 1;
-                read_count.set(reads);
-                label.set_text(&format!("refresh {reads}"));
-            },
-        );
-
-        assert_eq!(
-            label.text().as_str(),
-            "refresh 1",
-            "the pill labels itself the moment it is built"
-        );
+        assert_eq!(refreshes.get(), 1, "the pill refreshes itself once, when built");
+        assert_eq!(label.text().as_str(), "refresh 1", "and paints what it read");
         assert!(!popup.is_visible(), "the popup starts off screen");
 
         button.emit_clicked();
 
         assert!(popup.is_visible(), "clicking the pill puts its popup on screen");
-        assert_eq!(
-            label.text().as_str(),
-            "refresh 2",
-            "clicking the pill re-reads the label"
-        );
+        assert_eq!(refreshes.get(), 2, "clicking the pill asks for a fresh reading");
+        assert_eq!(label.text().as_str(), "refresh 2", "and paints that one");
     }
 }

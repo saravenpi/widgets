@@ -21,14 +21,11 @@ struct ActiveWorkspace {
 }
 
 pub fn run(tx: async_channel::Sender<Vec<Workspace>>) {
-    match state() {
-        Some(initial) => {
-            if tx.send_blocking(initial).is_err() {
-                return;
-            }
-        }
-        None => eprintln!("statusbar: initial hyprctl workspace query failed"),
+    // The state up front, then one re-query per relevant event.
+    if !publish(&tx, false) {
+        return;
     }
+
     let Some(path) = event_socket() else {
         eprintln!("statusbar: hyprland event socket path incomplete, workspace list will not update");
         return;
@@ -41,16 +38,25 @@ pub fn run(tx: async_channel::Sender<Vec<Workspace>>) {
         }
     };
     for line in std::io::BufReader::new(stream).lines().map_while(Result::ok) {
-        if !relevant(&line) {
-            continue;
+        if relevant(&line) && !publish(&tx, true) {
+            return;
         }
-        match state() {
-            Some(next) => {
-                if tx.send_blocking(next).is_err() {
-                    return;
-                }
-            }
-            None => eprintln!("statusbar: hyprctl workspace query failed"),
+    }
+}
+
+/// Query the workspaces and hand them to the bar.
+///
+/// `false` means the reader should stop: the bar is gone, or — once the stream is
+/// running (`fatal_on_error`) — the query itself failed, and a list that can no
+/// longer be trusted is worse than a reader that stops. The first query is only
+/// reported and carried on from, because the event socket is what keeps the list
+/// alive.
+fn publish(tx: &async_channel::Sender<Vec<Workspace>>, fatal_on_error: bool) -> bool {
+    match state() {
+        Some(workspaces) => tx.send_blocking(workspaces).is_ok(),
+        None => {
+            eprintln!("statusbar: hyprctl workspace query failed");
+            !fatal_on_error
         }
     }
 }

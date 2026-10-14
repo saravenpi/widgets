@@ -4,6 +4,42 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-10-15
+
+### Added
+
+- `launcher`: a test for the search surface. It builds the query field and the
+  result list for real, so it checks that the query decides what is on screen,
+  that the first match comes selected, and that the arrow keys stay inside the
+  list. Like the sidebar's panel check it stands down when there is no display.
+
+### Changed
+
+- The code the widgets ship is arranged by responsibility instead of by when it
+  was written. No behaviour changes; the suites pass before and after.
+  - `statusbar`: the bar itself is `bar.rs`. The battery, the network, the
+    system stats and the `sway` workspace state each split their probe from the
+    surface they feed, and the sysfs reads `battery` and `brightness` had grown
+    private copies of live in one `sysfs.rs`.
+  - `sidebar`: `main.rs` is the entry point and the pid file. The panel is
+    `panel.rs`, its rows are `panel/list.rs`, its actions are
+    `panel/actions.rs`, and the notification daemon is `dbus.rs` with the
+    connection it runs on in `dbus/runtime.rs`.
+  - `launcher`: `main.rs` is the entry point and the window placement, the
+    search surface is `popup.rs`, and the `Exec` splitter is a named state
+    machine rather than one long loop.
+  - `shell-common`: `theme::watch` is split into the palette half and the
+    user-sheet half, and the stylesheet checks moved beside the module.
+- Tests that build widgets now live in files beside the modules they check, so
+  no module counts its own checks as part of its surface.
+- `make check` runs `filet check` after `cargo check`, so the size, nesting and
+  complexity limits are part of the repository's own gate rather than a report
+  nobody runs.
+- `filet.yml` moves `limits.params` from 5 to 9: the freedesktop `Notify`
+  signature is eight arguments plus `&self`, and zbus derives the D-Bus
+  signature from the Rust parameter list, so that one shim cannot be shorter.
+  The reasoning is in the comment there.
+
 ## [0.9.0] - 2026-10-15
 
 ### Added

@@ -18,3 +18,13 @@ exclude:
   - Cargo.lock
   - dist
   - build
+
+# The one threshold the defaults do not fit.
+limits:
+  # The freedesktop notification interface fixes `Notify` at eight arguments
+  # (app_name, replaces_id, app_icon, summary, body, actions, hints,
+  # expire_timeout), and zbus derives the D-Bus signature from the Rust
+  # parameter list, so `sidebar`'s shim is nine with `&self` and cannot be
+  # shorter. Nothing else in the workspace passes more than five, so the limit
+  # moves to exactly what that one signature needs rather than off altogether.
+  params: 9

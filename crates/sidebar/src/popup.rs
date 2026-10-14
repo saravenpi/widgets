@@ -19,6 +19,9 @@ use shell_common::theme;
 
 use crate::model::{self, Notification};
 
+#[cfg(test)]
+pub(crate) mod tests;
+
 /// Seconds a toast stays on screen before it expires on its own.
 const TOAST_SECONDS: i64 = 6;
 
@@ -147,37 +150,22 @@ impl Popups {
     }
 
     fn row(self: &Rc<Self>, toast: &Toast) -> gtk4::Box {
+        let notification = &toast.notification;
         let row = gtk4::Box::new(gtk4::Orientation::Vertical, 2);
         row.add_css_class("toast");
-        if toast.notification.urgent {
+        if notification.urgent {
             row.add_css_class("urgent");
         }
 
-        let name = gtk4::Label::new(Some(&toast.notification.app_name));
-        name.add_css_class("dim");
-        name.set_halign(gtk4::Align::Start);
-
-        let summary = gtk4::Label::new(Some(&toast.notification.summary));
-        summary.add_css_class("summary");
-        summary.set_halign(gtk4::Align::Start);
-        summary.set_wrap(true);
-        summary.set_xalign(0.0);
-
-        row.append(&name);
-        row.append(&summary);
-
-        if !toast.notification.body.is_empty() {
-            let body = gtk4::Label::new(Some(&toast.notification.body));
-            body.add_css_class("body");
-            body.set_halign(gtk4::Align::Start);
-            body.set_wrap(true);
-            body.set_xalign(0.0);
-            row.append(&body);
+        row.append(&label(&notification.app_name, "dim", false));
+        row.append(&label(&notification.summary, "summary", true));
+        if !notification.body.is_empty() {
+            row.append(&label(&notification.body, "body", true));
         }
 
         let click = gtk4::GestureClick::new();
         let this = self.clone();
-        let id = toast.notification.id;
+        let id = notification.id;
         click.connect_released(move |_, _, _, _| {
             this.dismiss(id);
             (this.on_closed)(id, REASON_DISMISSED);
@@ -188,6 +176,18 @@ impl Popups {
     }
 }
 
+/// One line of a toast. The leading alignment and the wrap are the same on
+/// every one of them, so only the text and the class differ — and the class is
+/// what gives the line its place in the toast's type scale.
+fn label(text: &str, class: &str, wrap: bool) -> gtk4::Label {
+    let label = gtk4::Label::new(Some(text));
+    label.add_css_class(class);
+    label.set_halign(gtk4::Align::Start);
+    label.set_xalign(0.0);
+    label.set_wrap(wrap);
+    label
+}
+
 /// How long a toast lives, in seconds. A critical notification stays until it
 /// is dismissed, which is what a client sending `urgency == 3` expects.
 fn lifetime(notification: &Notification) -> i64 {
@@ -195,26 +195,5 @@ fn lifetime(notification: &Notification) -> i64 {
         i64::MAX / 2
     } else {
         TOAST_SECONDS
-    }
-}
-
-#[cfg(test)]
-impl Popups {
-    /// How many toasts are on screen. Tests only.
-    pub(crate) fn visible(&self) -> usize {
-        self.toasts.borrow().len()
-    }
-
-    /// The window carrying the stack. Tests only.
-    pub(crate) fn surface(&self) -> &gtk4::ApplicationWindow {
-        &self.window
-    }
-
-    /// Push every toast past its deadline so the next `expire` drops it.
-    /// Tests only: real toasts wait out `TOAST_SECONDS`.
-    pub(crate) fn force_expiry(&self) {
-        for toast in self.toasts.borrow_mut().iter_mut() {
-            toast.deadline = 0;
-        }
     }
 }

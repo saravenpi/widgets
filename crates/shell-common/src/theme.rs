@@ -139,138 +139,60 @@ fn user_sheet(name: &str) -> Option<String> {
 /// Reload the whole stylesheet on every change to the palette or the user
 /// stylesheet (`~/.config/widgets/palette.css` or `~/.config/widgets/style.css`).
 ///
-/// A missing file is not an error: the palette layer falls back to the built-in
-/// colours, and the user stylesheet layer is simply dropped when the file is
-/// absent (the widget keeps its shipped look). When the file appears later the
-/// monitor reports the creation and the widget picks it up.
+/// The monitors end up in the thread-locals above, which is what keeps them
+/// alive: a `FileMonitor` stops watching the moment it is dropped, and nothing
+/// else holds a reference to these.
 fn watch(provider: gtk4::CssProvider, widget_css: &str, name: &str) {
     let doc = document(widget_css);
-    let palette_path = match palette::palette_file() {
-        Some(p) => p,
-        None => return,
-    };
-    let palette_monitor = gtk4::gio::File::for_path(palette_path)
+    if let Some(monitor) = watch_palette(&provider, &doc) {
+        PALETTE_MONITOR.with(|slot| *slot.borrow_mut() = Some(monitor));
+    }
+    if let Some(monitor) = watch_user_sheet(&provider, &doc, name) {
+        STYLE_MONITOR.with(|slot| *slot.borrow_mut() = Some(monitor));
+    }
+}
+
+/// Watch the palette. Reloading the same provider with the rebuilt document is
+/// what restyles every widget on the display, with no restart.
+fn watch_palette(provider: &gtk4::CssProvider, doc: &str) -> Option<gtk4::gio::FileMonitor> {
+    let monitor = monitor_file(palette::palette_file()?)?;
+    reload_on_change(&monitor, provider, doc);
+    Some(monitor)
+}
+
+/// Watch the user's own sheet at `$HOME/.config/widgets/<name>.css`, when they
+/// have placed one. A missing file is not an error: the widget keeps its shipped
+/// look, and nothing is watched until the file appears.
+fn watch_user_sheet(
+    provider: &gtk4::CssProvider,
+    doc: &str,
+    name: &str,
+) -> Option<gtk4::gio::FileMonitor> {
+    let mut path = palette::style_file()?;
+    path.push(format!("{name}.css"));
+    if std::fs::metadata(&path).is_err() {
+        return None;
+    }
+    let monitor = monitor_file(path)?;
+    reload_on_change(&monitor, provider, doc);
+    Some(monitor)
+}
+
+fn monitor_file(path: std::path::PathBuf) -> Option<gtk4::gio::FileMonitor> {
+    gtk4::gio::File::for_path(path)
         .monitor_file(
             gtk4::gio::FileMonitorFlags::NONE,
             gtk4::gio::Cancellable::NONE,
-        );
-    let Ok(palette_monitor) = palette_monitor else {
-        return;
-    };
-    let doc_for_palette = doc.clone();
-    let palette_provider = provider.clone();
-    palette_monitor.connect_changed(move |_, _, _, _| {
-        palette_provider.load_from_data(&doc_for_palette);
-    });
-    PALETTE_MONITOR.with(|slot| *slot.borrow_mut() = Some(palette_monitor));
+        )
+        .ok()
+}
 
-    // Watch the user-editable widget stylesheet, if it exists.
-    let style_path = match palette::style_file() {
-        Some(dir) => {
-            let mut p = dir;
-            p.push(format!("{name}.css"));
-            p
-        }
-        None => return,
-    };
-    if std::fs::metadata(&style_path).is_ok() {
-        let style_monitor = gtk4::gio::File::for_path(style_path)
-            .monitor_file(
-                gtk4::gio::FileMonitorFlags::NONE,
-                gtk4::gio::Cancellable::NONE,
-            );
-        let Ok(style_monitor) = style_monitor else {
-            return;
-        };
-        let doc_for_style = doc.clone();
-        let style_provider = provider.clone();
-        style_monitor.connect_changed(move |_, _, _, _| {
-            style_provider.load_from_data(&doc_for_style);
-        });
-        STYLE_MONITOR.with(|slot| *slot.borrow_mut() = Some(style_monitor));
-    }
+/// Load `doc` back into `provider` on every change the monitor reports.
+fn reload_on_change(monitor: &gtk4::gio::FileMonitor, provider: &gtk4::CssProvider, doc: &str) {
+    let provider = provider.clone();
+    let doc = doc.to_string();
+    monitor.connect_changed(move |_, _, _, _| provider.load_from_data(&doc));
 }
 
 #[cfg(test)]
-mod tests {
-    use std::cell::RefCell;
-    use std::rc::Rc;
-
-    use super::*;
-
-    /// What GTK refused to parse. A stylesheet typo never fails a widget at
-    /// runtime - the rule simply stops applying - so the tests collect these.
-    ///
-    /// The provider is built through `glib::Object::new` on purpose. The
-    /// generated `CssProvider::new` asserts that `gtk::init` has run, and that
-    /// needs a display, while parsing does not. Staying display-free is what
-    /// lets the check run in CI, where no compositor exists.
-    fn parse_errors(document: &str) -> Vec<String> {
-        let errors = Rc::new(RefCell::new(Vec::new()));
-        let sink = errors.clone();
-        let provider: gtk4::CssProvider = gtk4::glib::Object::new();
-        provider.connect_parsing_error(move |_, _, error| {
-            sink.borrow_mut().push(error.to_string());
-        });
-        provider.load_from_data(document);
-        let collected = errors.borrow().clone();
-        collected
-    }
-
-    fn widget_sheet(widget: &str) -> String {
-        let path = format!(
-            "{}/../{}/style.css",
-            env!("CARGO_MANIFEST_DIR"),
-            widget
-        );
-        std::fs::read_to_string(&path)
-            .unwrap_or_else(|error| panic!("cannot read {path}: {error}"))
-    }
-
-    /// Every stylesheet the widgets ship has to parse, on any machine: a rule
-    /// GTK rejects stops applying silently, so nothing else would notice.
-    ///
-    /// Every GTK call stays in this one test on purpose. GTK is not thread
-    /// safe, and two tests parsing at the same time report errors that are not
-    /// there - "No property named border" for a border that parses fine on its
-    /// own - so the work has to stay on a single thread.
-    #[test]
-    fn stylesheets_parse() {
-        let palette_and_base = format!("{}\n{}", palette::palette_css(), BASE_CSS);
-        assert_eq!(
-            parse_errors(&palette_and_base),
-            Vec::<String>::new(),
-            "the palette and the shared base sheet must parse"
-        );
-
-        for widget in ["statusbar", "sidebar", "launcher"] {
-            let document = format!("{}\n{}", palette_and_base, widget_sheet(widget));
-            assert_eq!(
-                parse_errors(&document),
-                Vec::<String>::new(),
-                "{widget} style.css does not parse on top of the shared base"
-            );
-        }
-
-        // The assertions above only prove something while GTK reports what it
-        // refuses. Without these, a change that stopped collecting errors would
-        // leave the check green and empty instead of failing.
-        assert!(!parse_errors("window { colour: red; }").is_empty());
-        assert!(!parse_errors("window { background-color: notacolor; }").is_empty());
-        assert!(parse_errors("window { background-color: #19120c; }").is_empty());
-    }
-
-    /// The reload path rebuilds the whole document; the widget layer has to be
-    /// in there, or a palette change would quietly drop a widget's own rules.
-    #[test]
-    fn document_layers_are_all_present() {
-        let widget = ".statusbar { color: @palette_fg; }";
-        let full = document(widget);
-        assert!(full.contains(BASE_CSS), "the shared base is missing");
-        assert!(full.ends_with(widget), "the widget sheet is missing");
-        assert!(
-            full.contains("palette_bg"),
-            "the palette layer is missing"
-        );
-    }
-}
+mod tests;

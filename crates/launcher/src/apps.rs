@@ -1,30 +1,28 @@
+//! Finding the applications installed on this machine.
+//!
+//! The launcher reads the XDG data directories in precedence order and takes
+//! the first `.desktop` file that claims each name, which is what the desktop
+//! entry specification asks for.
+
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
+/// How many results the launcher shows at once.
 const MAX_MATCHES: usize = 10;
 
+/// One launchable application, as its `.desktop` file describes it.
 pub struct App {
     pub name: String,
     pub generic: Option<String>,
     pub exec: String,
 }
 
+/// Every application found on this machine, sorted by name.
 pub fn discover() -> Vec<App> {
     let mut seen = HashSet::new();
     let mut found = Vec::new();
     for dir in data_dirs() {
-        let Ok(entries) = std::fs::read_dir(dir) else {
-            continue;
-        };
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if path.extension().and_then(|ext| ext.to_str()) != Some("desktop") {
-                continue;
-            }
-            let file = entry.file_name().to_string_lossy().into_owned();
-            if !seen.insert(file) {
-                continue;
-            }
+        for path in unclaimed(&dir, &mut seen) {
             if let Some(app) = parse(&path) {
                 found.push(app);
             }
@@ -34,6 +32,24 @@ pub fn discover() -> Vec<App> {
     found
 }
 
+/// The `.desktop` files in one directory, minus the names an earlier directory
+/// already contributed: the earlier directory wins.
+fn unclaimed(dir: &Path, seen: &mut HashSet<String>) -> Vec<PathBuf> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Vec::new();
+    };
+    entries
+        .flatten()
+        .filter(|entry| {
+            entry.path().extension().and_then(|ext| ext.to_str()) == Some("desktop")
+                && seen.insert(entry.file_name().to_string_lossy().into_owned())
+        })
+        .map(|entry| entry.path())
+        .collect()
+}
+
+/// The indices of the apps matching `query`, capped at [`MAX_MATCHES`]. An
+/// empty query matches everything, so the launcher opens on the top of the list.
 pub fn matches(apps: &[App], query: &str) -> Vec<usize> {
     let needle = query.trim().to_lowercase();
     if needle.is_empty() {
@@ -54,6 +70,7 @@ pub fn matches(apps: &[App], query: &str) -> Vec<usize> {
         .collect()
 }
 
+/// Where `.desktop` files live, most specific first.
 fn data_dirs() -> Vec<PathBuf> {
     let mut dirs = Vec::new();
     if let Some(xdg) = std::env::var_os("XDG_DATA_HOME").filter(|value| !value.is_empty()) {
@@ -66,12 +83,26 @@ fn data_dirs() -> Vec<PathBuf> {
     dirs
 }
 
+/// Read one `.desktop` file. `None` when the entry is hidden, or names no
+/// program: a row that cannot be launched is worse than no row.
 fn parse(path: &Path) -> Option<App> {
     let text = std::fs::read_to_string(path).ok()?;
-    let mut name = None;
-    let mut generic = None;
-    let mut exec = None;
-    let mut hidden = false;
+    let entry = entry_from(&text);
+    if entry.hidden {
+        return None;
+    }
+    Some(App {
+        name: entry.name?,
+        generic: entry.generic,
+        exec: entry.exec?,
+    })
+}
+
+/// The `[Desktop Entry]` group of a `.desktop` file. Everything after it is a
+/// different matter — the actions, and the localized keys like `Name[fr]` — and
+/// is skipped.
+fn entry_from(text: &str) -> Entry {
+    let mut entry = Entry::default();
     let mut in_entry_group = false;
     for line in text.lines() {
         if line.starts_with('[') {
@@ -81,28 +112,38 @@ fn parse(path: &Path) -> Option<App> {
         if line.starts_with('#') || !in_entry_group {
             continue;
         }
-        let Some((key, value)) = line.split_once('=') else {
-            continue;
-        };
-        let value = value.trim();
+        if let Some((key, value)) = line.split_once('=') {
+            entry.apply(key, value.trim());
+        }
+    }
+    entry
+}
+
+/// The fields the launcher reads out of a `.desktop` file.
+#[derive(Default)]
+struct Entry {
+    name: Option<String>,
+    generic: Option<String>,
+    exec: Option<String>,
+    hidden: bool,
+}
+
+impl Entry {
+    /// Fold one `key=value` line in. Keys we do not render are not an error:
+    /// the specification defines many more than the launcher shows.
+    fn apply(&mut self, key: &str, value: &str) {
         match key {
-            "Name" => name = Some(unescape(value)),
-            "GenericName" => generic = Some(unescape(value)),
-            "Exec" => exec = Some(value.to_string()),
-            "NoDisplay" | "Hidden" => hidden = hidden || value.eq_ignore_ascii_case("true"),
+            "Name" => self.name = Some(unescape(value)),
+            "GenericName" => self.generic = Some(unescape(value)),
+            "Exec" => self.exec = Some(value.to_string()),
+            "NoDisplay" | "Hidden" => self.hidden |= value.eq_ignore_ascii_case("true"),
             _ => {}
         }
     }
-    if hidden {
-        return None;
-    }
-    Some(App {
-        name: name?,
-        generic,
-        exec: exec?,
-    })
 }
 
+/// Resolve the escapes the desktop entry specification defines in string
+/// values.
 fn unescape(value: &str) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars();
@@ -124,60 +165,4 @@ fn unescape(value: &str) -> String {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn write(name: &str, body: &str) -> PathBuf {
-        let path = std::env::temp_dir().join(name);
-        std::fs::write(&path, body).expect("test desktop file");
-        path
-    }
-
-    #[test]
-    fn parses_fields_and_skips_hidden_entries() {
-        let shown = write(
-            "launcher-shown.desktop",
-            "[Desktop Entry]\nType=Application\nName=Fire\nGenericName=Browser\nExec=firefox %u\n\n[Desktop Action new]\nExec=firefox --new-window\n",
-        );
-        let app = parse(&shown).expect("visible entry");
-        assert_eq!(app.name, "Fire");
-        assert_eq!(app.generic.as_deref(), Some("Browser"));
-        assert_eq!(app.exec, "firefox %u");
-        std::fs::remove_file(&shown).ok();
-
-        let hidden = write(
-            "launcher-hidden.desktop",
-            "[Desktop Entry]\nName=Secret\nNoDisplay=true\nExec=secret\n",
-        );
-        assert!(parse(&hidden).is_none());
-        std::fs::remove_file(&hidden).ok();
-
-        let localized = write(
-            "launcher-localized.desktop",
-            "[Desktop Entry]\nName=Term\nName[fr]=Terminale\nExec=kitty\n",
-        );
-        let app = parse(&localized).expect("localized entry");
-        assert_eq!(app.name, "Term");
-        std::fs::remove_file(&localized).ok();
-    }
-
-    #[test]
-    fn matches_fuzzy_substrings_and_caps_results() {
-        let apps = vec![
-            App {
-                name: "Firefox".into(),
-                generic: Some("Web Browser".into()),
-                exec: "firefox".into(),
-            },
-            App {
-                name: "Files".into(),
-                generic: None,
-                exec: "nautilus".into(),
-            },
-        ];
-        assert_eq!(matches(&apps, "FIRE"), vec![0]);
-        assert_eq!(matches(&apps, "browser"), vec![0]);
-        assert_eq!(matches(&apps, ""), vec![0, 1]);
-        assert_eq!(matches(&apps, "zzz"), Vec::<usize>::new());
-    }
-}
+mod tests;

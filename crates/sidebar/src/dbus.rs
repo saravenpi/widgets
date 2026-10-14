@@ -1,3 +1,12 @@
+//! `sidebar`'s notification daemon: the `org.freedesktop.Notifications`
+//! interface the panel answers on.
+//!
+//! This file is the interface itself — its methods, its signal, and the
+//! translation between what a client sends and the [`Event`] the panel folds
+//! in. The connection and its runtime live in [`runtime`].
+
+mod runtime;
+
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::OnceLock;
@@ -7,13 +16,21 @@ use zbus::zvariant::OwnedValue;
 
 use crate::model::{self, Notification};
 
+pub use runtime::{emit_closed, start};
+
+/// One change to the panel's list.
 pub enum Event {
     Added(Notification),
     Removed(u32),
 }
 
+/// The interface's own signal emitter, captured once the connection is up so
+/// the widget layers can report a close without holding the connection.
 static EMITTER: OnceLock<SignalEmitter<'static>> = OnceLock::new();
 
+/// The interface, plus the id counter that names each notification. A client
+/// that supplies `replaces_id` keeps its own id, which is why the counter is
+/// bumped past it rather than reused.
 pub struct Notifications {
     next_id: AtomicU32,
 }
@@ -28,6 +45,11 @@ impl Notifications {
 
 #[zbus::interface(name = "org.freedesktop.Notifications", spawn = false)]
 impl Notifications {
+    /// The freedesktop `Notify` method. Its eight arguments are the spec's, not
+    /// the panel's: they are what `notify-send` and every other client send, so
+    /// the signature is fixed and the ones the panel cannot render are ignored
+    /// on purpose.
+    #[allow(clippy::too_many_arguments)]
     async fn notify(
         &self,
         app_name: String,
@@ -96,44 +118,4 @@ impl Notifications {
         id: u32,
         reason: u32,
     ) -> zbus::Result<()>;
-}
-
-pub fn start(next_id: u32) -> tokio::runtime::Handle {
-    let runtime = tokio::runtime::Builder::new_current_thread()
-        .enable_all()
-        .build()
-        .expect("sidebar: tokio runtime");
-    let handle = runtime.handle().clone();
-    std::thread::spawn(move || {
-        runtime.block_on(async move {
-            match serve(next_id).await {
-                Ok(()) => std::future::pending::<()>().await,
-                Err(err) => eprintln!("sidebar: notification daemon error: {err}"),
-            }
-        });
-    });
-    handle
-}
-
-pub fn emit_closed(handle: &tokio::runtime::Handle, id: u32, reason: u32) {
-    handle.spawn(async move {
-        if let Some(emitter) = EMITTER.get() {
-            let _ = emitter.notification_closed(id, reason).await;
-        }
-    });
-}
-
-async fn serve(next_id: u32) -> zbus::Result<()> {
-    let connection = zbus::connection::Builder::session()?
-        .name("org.freedesktop.Notifications")?
-        .serve_at(
-            "/org/freedesktop/Notifications",
-            Notifications::new(next_id),
-        )?
-        .build()
-        .await?;
-    let emitter = SignalEmitter::new(&connection, "/org/freedesktop/Notifications")?.to_owned();
-    let _ = EMITTER.set(emitter);
-    std::future::pending::<()>().await;
-    Ok(())
 }
