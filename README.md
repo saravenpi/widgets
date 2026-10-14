@@ -13,7 +13,7 @@ prints a clear message and exits without opening a window
 
 | Crate | Binary | What it does |
 | --- | --- | --- |
-| `statusbar` | `statusbar` | Top bar: workspaces via the compositor's own IPC (sway, niri, Hyprland), a clock and CPU/memory readings |
+| `statusbar` | `statusbar` | Top bar: workspaces via the compositor's own IPC (sway, niri, Hyprland), a clock, CPU/memory readings, and optional volume, brightness, battery and network pills plus a logout button |
 | `sidebar` | `sidebar` | `org.freedesktop.Notifications` daemon plus an overlay list; `mod+n` toggles it |
 | `launcher` | `launcher` | Centered dmenu-style launcher over installed `.desktop` entries; `mod+space` |
 | `shell-common` | (library) | Palette CSS loading and the shared layer-window / theme boilerplate |
@@ -165,7 +165,9 @@ It follows a single Swiss-typographic scale rather than a per-widget look:
   and launcher are floating cards, and the workspace chips, the clock, the
   compositor, the RAM and the CPU readings are all flat pieces. Every widget keeps
   its modules on a hard grid, square off everything, and aligns to the compositor's
-  gaps (`shell_common::theme::GAP`) on the screen edge.
+  gaps (`shell_common::theme::GAP`) on the screen edge. The bar insets itself 10 px
+  from every screen edge and keeps 10 px of padding inside, the same measure as
+  `gaps outer` in the compositor config.
 - **Toasts, not requests.** A notification that arrives while the panel is shut
   shows itself in the top-right rather than waiting for `mod+n`.
 
@@ -225,11 +227,33 @@ Workspaces come from the compositor's own IPC and follow it live: the event
 stream for **sway** (i3 protocol) and **niri**, and `.socket2.sock` for
 **Hyprland**. Clicking a chip focuses that workspace through the same IPC.
 
-The right-hand end carries the CPU and memory load as two pills. Memory is
+The right-hand end carries the CPU and memory load as two pills, then a row of
+optional control pills: volume, brightness, battery, network and a logout button.
+Each control pill only appears when its backend is present, so the bar looks right
+on a desktop without a battery or on a machine without audio. Memory is
 `MemTotal - MemAvailable` from `/proc/meminfo`; the CPU share is the busy delta
 between two `/proc/stat` samples two seconds apart. Both are read from `/proc`
 with no dependency, and a reading that cannot be taken leaves its pill empty
 rather than showing a stale number.
+
+- **Volume** reads the default sink through `pactl` (PulseAudio / PipeWire). Click
+  the pill to open a popup with the percent, a fill bar and `+1%`/`-1%` steps; the
+  pill updates after each change.
+- **Brightness** reads the first backlight device from `/sys/class/backlight` and
+  writes it back. Click for a popup with the percent, a fill bar and `+5%`/`-5%`
+  steps.
+- **Battery** reads the first battery from `/sys/class/power_supply` and ticks every
+  30 seconds. It shows percent and a one-word state (`Chg`/`Dis`/`Full`/`AC`); click
+  for a popup with the percent, a fill bar and the time-to-full / time-to-empty when
+  the kernel reports it.
+- **Network** reads NetworkManager through `nmcli` and falls back to
+  `networkctl` (systemd-networkd). It shows the connection state and, when
+  connected, the Wi-Fi SSID or interface name, and ticks every 15 seconds; click for
+  a popup with the state and interface.
+- **Logout** ends the current session through `loginctl terminate-session
+  $XDG_SESSION_ID` — the same action a compositor logout binding
+  (`mod+shift+e`) should map to. It is hidden when the session id is unknown or
+  `loginctl` is absent.
 
 ### The sidebar
 

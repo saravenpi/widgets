@@ -12,22 +12,47 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `gaps inner`, so the statusbar, sidebar and launcher all inset by the same
   measure the window rectangles use on every exposed screen edge.
 
-## [0.7.0] - 2026-10-14
+## [0.8.0] - 2026-10-14
 
 ### Added
 
-- Every widget now reads its own stylesheet from
-  `~/.config/widgets/<name>.css` (for example `~/.config/widgets/statusbar.css`)
-  when that file exists, and watches it for changes — copy any widget's
-  `style.css` there, edit it, and the widget restyles in place without a
-  restart. When the file is absent the widget falls back to its compiled-in
-  default, so the feature is optional.
+- `statusbar`: a logout pill that ends the current session through
+  `loginctl terminate-session $XDG_SESSION_ID`, the same action a compositor
+  logout binding (`mod+shift+e`) should map to. The pill is hidden when the
+  session id is unknown or `loginctl` is absent, so the bar never offers a dead
+  button.
+- `statusbar`: a volume pill driven by PulseAudio / PipeWire through `pactl`.
+  Clicking the pill opens a small popup with the current percent, a fill bar, and
+  `+1%`/`-1%` steps; the pill updates to the new level after each change.
+- `statusbar`: a brightness pill driven by the ACPI backlight class in
+  `/sys/class/backlight`. Clicking opens a popup with the percent, a fill bar,
+  and `+5%`/`-5%` steps; the pill follows the new level after each change.
+- `statusbar`: a battery pill reading the first battery from
+  `/sys/class/power_supply`. It shows percent and a one-word state (`Chg`/`Dis`/
+  `Full`/`AC`) and ticks every 30 seconds; clicking opens a popup with the
+  percent, a fill bar and the time-to-full / time-to-empty when the kernel
+  reports it.
+- `statusbar`: a network pill that reads NetworkManager through `nmcli` and
+  falls back to `networkctl` (systemd-networkd). It shows the connection state
+  and, when connected, the Wi-Fi SSID or interface name, and ticks every 15
+  seconds; clicking opens a popup with the state and interface.
+- `statusbar`: a shared popup window used by the volume, brightness and battery
+  pills, anchored under the bar so the panel floats the same way the bar does.
 
 ### Changed
 
-- The screen-edge gap is now 10 px in the widgets and in the sway config, so
-  the bar, the sidebar and the launcher all inset by the same measure the window
-  rectangles use on every exposed screen edge (`gaps outer 10`).
+- The statusbar inset is now 10 px margin and 10 px padding on every side,
+  matching `gaps outer` in the compositor config the same way the sidebar and
+  launcher already do, so the bar and the window rectangles use one measure on
+  every exposed screen edge.
+- The right-hand end of the bar is now a controls row of soft pills (volume,
+  brightness, battery, network, logout) that reuse the same pill language as the
+  RAM and CPU stat pills, so both ends of the bar read as one material.
+- Every new pill is optional at runtime: it is only placed on the bar when its
+  backend is present (a working `pactl`, a writable backlight device, a battery
+  in `/sys/class/power_supply`, or a network manager), and disappears
+  automatically on machines that lack it.
+
 
 ## [0.6.3] - 2026-10-13
 

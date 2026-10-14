@@ -1030,6 +1030,7 @@ dependencies = [
  "async-channel",
  "chrono",
  "gtk4",
+ "gtk4-layer-shell",
  "serde",
  "serde_json",
  "shell-common",
