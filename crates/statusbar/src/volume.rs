@@ -56,17 +56,10 @@ fn parse_channel_percent(token: &str) -> Option<u16> {
     percent.trim().parse().ok()
 }
 
-/// Build the volume pill that sits in the bar. The pill shows the current
-/// percent and opens the shared popup on click.
-pub fn pill(popup: Popup, label: Label) -> Button {
-    let pill = Button::with_label(&label.text());
-    pill.add_css_class("pill");
-    let popup_for_show = popup.clone();
-    let label_for_update = label.clone();        pill.connect_clicked(move |_| {
-            show(&popup_for_show.clone());
-            label_for_update.set_text(&format!("Vol {}", percent().unwrap_or(0)));
-        });
-    pill
+/// Set a volume pill label to the current level. Called once at build time and
+/// again whenever the pill is clicked.
+pub fn refresh(label: &Label) {
+    label.set_text(&format!("Vol {}", percent().unwrap_or(0)));
 }
 
 /// Render the volume popup contents into a shared `Popup`.
@@ -76,7 +69,7 @@ pub fn show(popup: &Popup) {
         let header = Label::new(Some("Volume"));
         header.add_css_class("label");
 
-        let value = Label::new(Some(&format!("{active}")));
+        let value = Label::new(Some(&active.to_string()));
         value.add_css_class("value");
 
         let row = gtk4::Box::new(Orientation::Horizontal, 6);
@@ -86,21 +79,17 @@ pub fn show(popup: &Popup) {
         let value_clone = value.clone();
         up.connect_clicked(move |_| {
             step(true);
-            value_clone.set_text(&format!("{}", percent().unwrap_or(0)));
+            value_clone.set_text(&percent().unwrap_or(0).to_string());
         });
 
-        let fill = gtk4::Box::new(Orientation::Horizontal, 0);
-        fill.add_css_class("fill");
-        let thumb = gtk4::Box::new(Orientation::Vertical, 0);
-        fill.append(&thumb);
-        thumb.set_width_request((active as f64 / 100.0 * 150.0) as i32);
+        let fill = crate::popup::fill_bar(active);
 
         let down = Button::with_label("-1%");
         down.add_css_class("step");
         let value_clone = value.clone();
         down.connect_clicked(move |_| {
             step(false);
-            value_clone.set_text(&format!("{}", percent().unwrap_or(0)));
+            value_clone.set_text(&percent().unwrap_or(0).to_string());
         });
 
         row.append(&up);

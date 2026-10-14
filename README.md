@@ -193,6 +193,11 @@ itself the moment `palette sync` rewrites it — no restart, no compositor reloa
 required. A file that does not exist yet is watched too, so a widget started
 before its first sync picks the colors up when it appears.
 
+The statusbar's control icons are the one exception. They are rasterized
+bitmaps, not stylesheet rules, so they take their ink once, when the bar is
+built: a `palette sync` restyles the bar around them, and restarting the bar is
+what retints the glyphs themselves.
+
 ## Running
 
 Start the bar from your compositor; all three binaries live in `~/.local/bin`.
@@ -229,8 +234,11 @@ stream for **sway** (i3 protocol) and **niri**, and `.socket2.sock` for
 
 The right-hand end carries the CPU and memory load as two pills, then a row of
 optional control pills: volume, brightness, battery, network and a logout button.
-Each control pill only appears when its backend is present, so the bar looks right
-on a desktop without a battery or on a machine without audio. Memory is
+Each control pill leads with a pixel-art glyph — the
+[pixelarticons][pixelarticons] set, drawn in the palette foreground and
+rasterized through librsvg, which GTK already links, so the bar takes on no icon
+dependency. Each control pill only appears when its backend is present, so the bar
+looks right on a desktop without a battery or on a machine without audio. Memory is
 `MemTotal - MemAvailable` from `/proc/meminfo`; the CPU share is the busy delta
 between two `/proc/stat` samples two seconds apart. Both are read from `/proc`
 with no dependency, and a reading that cannot be taken leaves its pill empty
@@ -250,10 +258,12 @@ rather than showing a stale number.
   `networkctl` (systemd-networkd). It shows the connection state and, when
   connected, the Wi-Fi SSID or interface name, and ticks every 15 seconds; click for
   a popup with the state and interface.
-- **Logout** ends the current session through `loginctl terminate-session
-  $XDG_SESSION_ID` — the same action a compositor logout binding
-  (`mod+shift+e`) should map to. It is hidden when the session id is unknown or
-  `loginctl` is absent.
+- **Logout** ends the current session through
+  `loginctl terminate-session $XDG_SESSION_ID` — the same action a compositor
+  logout binding (`mod+shift+e`) should map to — and carries the power glyph. The
+  bar only places it when `loginctl` can describe the session, and asking that is
+  a read: the button never ends the session just to prove it could. It is hidden
+  when the session id is unknown or `loginctl` is absent.
 
 ### The sidebar
 
@@ -297,3 +307,5 @@ marked `NoDisplay`/`Hidden`, and shows the best 10 matches. Type to filter,
 ## License
 
 MIT
+
+[pixelarticons]: https://icon-sets.iconify.design/pixelarticons/

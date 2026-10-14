@@ -65,6 +65,29 @@ pub(crate) fn palette_css() -> String {
         .unwrap_or_else(|| FALLBACK.to_string())
 }
 
+/// The `palette_fg` colour from the palette stylesheet, as a GDK colour.
+///
+/// A widget that rasterizes a bitmap (an icon, say) cannot pull its colour from
+/// the stylesheet cascade the way a label does, so it reads the token here
+/// instead. The built-in fallback is used when the file is missing, so this is
+/// `None` only when the value itself cannot be parsed — never because the user
+/// has not run `palette sync` yet.
+pub fn palette_fg_rgba() -> Option<gtk4::gdk::RGBA> {
+    let value = named_color(&palette_css(), "palette_fg")?;
+    gtk4::gdk::RGBA::parse(value.as_str()).ok()
+}
+
+/// Pull one `@define-color <name> <value>;` declaration out of a stylesheet
+/// document.
+fn named_color(sheet: &str, name: &str) -> Option<String> {
+    let prefix = format!("@define-color {name} ");
+    sheet.lines().find_map(|line| {
+        let rest = line.trim().strip_prefix(&prefix)?;
+        let value = rest.trim().trim_end_matches(';').trim();
+        (!value.is_empty()).then(|| value.to_string())
+    })
+}
+
 /// Register a stylesheet document on the display and return its provider.
 ///
 /// One provider holds the whole document so the cascade inside it is decided

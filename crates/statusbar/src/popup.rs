@@ -1,7 +1,7 @@
 //! A single shared popup window for the volume and brightness controls.
 
 use gtk4::prelude::*;
-use gtk4::{Application, ApplicationWindow, Box, Orientation};
+use gtk4::{Application, ApplicationWindow, Box, Label, Orientation};
 use gtk4_layer_shell::{Edge, Layer, LayerShell};
 
 use shell_common::layer::LayerWindow;
@@ -49,6 +49,38 @@ impl Popup {
         self.window.set_visible(false);
     }
 
+    /// Whether the popup is currently on screen. Only the tests need to ask:
+    /// nothing in the bar has to know its own popup's state.
+    #[cfg(test)]
+    pub fn is_visible(&self) -> bool {
+        self.window.is_visible()
+    }
+}
+
+/// A popup holding a single title-and-value pair: what a control shows when its
+/// backend cannot be read. Every control drew its own copy of this.
+pub fn message(popup: &Popup, title: &str, value: &str) {
+    popup.show(|pop| {
+        let header = Label::new(Some(title));
+        header.add_css_class("label");
+        let value_label = Label::new(Some(value));
+        value_label.add_css_class("value");
+        pop.append(&header);
+        pop.append(&value_label);
+    });
+}
+
+/// A fill bar whose thumb fills `percent` of a 150 px track.
+///
+/// The volume, brightness and battery popups each drew their own copy; they share
+/// this one so the three bars cannot drift apart.
+pub fn fill_bar(percent: u16) -> Box {
+    let bar = Box::new(Orientation::Horizontal, 0);
+    bar.add_css_class("fill");
+    let thumb = Box::new(Orientation::Vertical, 0);
+    bar.append(&thumb);
+    thumb.set_width_request((percent as f64 / 100.0 * 150.0) as i32);
+    bar
 }
 
 impl Clone for Popup {

@@ -1,0 +1,20 @@
+# filet.yml
+# Minimal project config for the Facile code-quality gate.
+# Inherits filet's defaults; only overrides what this repo needs.
+
+version: 1
+
+# Where the linter should walk.
+include:
+  - crates/**/*.rs
+  - Makefile
+  - facile.toml
+
+# What to leave alone.
+exclude:
+  - target
+  - vendor
+  - node_modules
+  - Cargo.lock
+  - dist
+  - build

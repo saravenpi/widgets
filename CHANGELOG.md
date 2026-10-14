@@ -4,13 +4,51 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.6.6] - 2026-10-14
+## [0.9.0] - 2026-10-15
+
+### Added
+
+- `statusbar`: every control pill now leads with a pixel-art glyph, from the
+  [pixelarticons](https://icon-sets.iconify.design/pixelarticons/) set. The SVGs
+  are rasterized through librsvg, the SVG loader GTK already links, so the bar
+  takes on no icon dependency of its own. They are drawn in the palette
+  foreground read from `~/.config/widgets/palette.css`. A texture is a bitmap,
+  not a stylesheet rule, so the glyphs take that ink once, when the bar is
+  built: a later `palette sync` restyles the bar around them, and restarting the
+  bar is what retints them.
+
+### Fixed
+
+- `statusbar`: the logout pill ended the session as its own availability check.
+  Deciding whether to draw the button ran `loginctl terminate-session`, so
+  starting the bar logged the user out. The check is now a read
+  (`loginctl show-session`) and never ends the session it is asking about.
+- `statusbar`: clicking a control pill did nothing. The pill wiring dropped the
+  popup instead of showing it, so volume, brightness, battery and network all
+  lost the popups they are supposed to open.
+- `statusbar`: the battery and network tickers refreshed a label that was never
+  on the bar. Each pill built its button from a copy of the pill's text, so the
+  label the ticker held was orphaned and the visible one never changed. The pill
+  now paints the very label the ticker updates.
+- `statusbar`: the brightness pill was placed on machines whose backlight is
+  read-only, because the writability check was a write that set the backlight to
+  `0`. The check opens the attribute for writing without touching its value, and
+  a read-only device hides the pill instead of offering a dead control.
+- `statusbar`: the popup's value label carried the pill's whole sentence, so a
+  brightness step showed `Brightness 42` where the popup reads `42`.
 
 ### Changed
 
-- Matched the bar gap to the compositor's `gaps outer` (6 px) rather than
-  `gaps inner`, so the statusbar, sidebar and launcher all inset by the same
-  measure the window rectangles use on every exposed screen edge.
+- `statusbar`: the control row, the pill that wraps each control, and the fill
+  bar and fallback message every popup shares moved out of `main.rs` into
+  `control.rs` and `popup.rs`, so `main.rs` wires the bar rather than rebuilding
+  it.
+- `statusbar`: refreshing a pill costs one probe of its backend instead of one
+  per value read — the battery takes a single snapshot per call — replacing the
+  short-lived probe caches three of the modules had grown.
+- The workspace version now matches the release. `v0.8.0` shipped while
+  `Cargo.toml` still said `0.7.0`, so the released binaries reported the wrong
+  version; this release carries `0.9.0` in both places.
 
 ## [0.8.0] - 2026-10-14
 
@@ -53,6 +91,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   in `/sys/class/power_supply`, or a network manager), and disappears
   automatically on machines that lack it.
 
+## [0.6.6] - 2026-10-14
+
+### Changed
+
+- Matched the bar gap to the compositor's `gaps outer` (6 px) rather than
+  `gaps inner`, so the statusbar, sidebar and launcher all inset by the same
+  measure the window rectangles use on every exposed screen edge.
 
 ## [0.6.3] - 2026-10-13
 

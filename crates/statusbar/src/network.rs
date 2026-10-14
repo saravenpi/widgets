@@ -5,7 +5,7 @@
 use std::process::Command;
 
 use gtk4::prelude::*;
-use gtk4::{Box, Button, Label, Orientation};
+use gtk4::{Box, Label, Orientation};
 
 use crate::popup::Popup;
 
@@ -21,23 +21,9 @@ pub fn label_text() -> Option<String> {
     Some(format_label(&s.kind, &s.name))
 }
 
-/// Build the network pill. The pill shows the current state and opens a detail
-/// popup on click.
-pub fn pill(popup: Popup, label: Label) -> Button {
-    let pill = Button::with_label(&label.text());
-    pill.add_css_class("pill");
-    let popup_for_show = popup.clone();
-    let label_for_update = label.clone();
-    pill.connect_clicked(move |_| {
-        show(&popup_for_show.clone());
-        if let Some(text) = label_text() {
-            label_for_update.set_text(&text);
-        }
-    });
-    pill
-}
-
-/// Refresh a network pill label already on the bar. Used by the ticker.
+/// Set a network pill label to the current state. Called once at build time and
+/// again on every tick. Leaves the label alone when the state cannot be read,
+/// rather than blanking a value that was correct a moment ago.
 pub fn refresh(label: &Label) {
     if let Some(text) = label_text() {
         label.set_text(&text);
@@ -49,14 +35,7 @@ pub fn show(popup: &Popup) {
     let s = match state() {
         Some(s) => s,
         None => {
-            popup.show(|pop| {
-                let header = Label::new(Some("Network"));
-                header.add_css_class("label");
-                let value = Label::new(Some("no manager"));
-                value.add_css_class("value");
-                pop.append(&header);
-                pop.append(&value);
-            });
+            crate::popup::message(popup, "Network", "no manager");
             return;
         }
     };

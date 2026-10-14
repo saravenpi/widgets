@@ -1,5 +1,7 @@
 mod battery;
 mod brightness;
+mod control;
+mod icons;
 mod ipc;
 mod logout;
 mod network;
@@ -79,73 +81,23 @@ fn activate(app: &Application) {
     stats.append(&ram);
     stats.append(&cpu);
 
-    // Controls on the right, after the stats: volume, brightness, battery,
-    // network, logout. Each is a soft pill matching the stat pills; the last one
-    // (logout) is the only one that carries the urgency colour so it reads as an
-    // action.
-    let controls = Box::new(gtk4::Orientation::Horizontal, 6);
-    controls.add_css_class("controls");
-    controls.set_hexpand(false);
-    controls.set_halign(gtk4::Align::End);
-
     let popup = popup::Popup::new(app);
 
-    // Battery and network labels must outlive their tickers, so keep them in
-    // variables and tick them on intervals. Volume and brightness update on click
-    // only (the popup is the source of truth there).
-    let mut bat_label: Option<Label> = None;
-    let mut net_label: Option<Label> = None;
+    // The control row on the right, after the stats. Only battery and network
+    // are ticked: volume and brightness update when they are clicked, because
+    // for those the popup is the source of truth.
+    let control::Row {
+        container: controls,
+        battery_label: bat_label,
+        network_label: net_label,
+    } = control::build(&popup);
 
-    if volume::available() {
-        let vol_label = Label::new(Some(&format!("Vol {}", volume::percent().unwrap_or(0))));
-        vol_label.add_css_class("pill");
-        let vol_button = volume::pill(popup.clone(), vol_label);
-        controls.append(&vol_button);
-    }
-
-    if brightness::available() {
-        let bright_label = Label::new(Some(&format!(
-            "Brightness {}",
-            brightness::percent().unwrap_or(0)
-        )));
-        bright_label.add_css_class("pill");
-        let bright_button = brightness::pill(popup.clone(), bright_label);
-        controls.append(&bright_button);
-    }
-
-    if battery::available() {
-        let bat_label_inner = Label::new(Some(&format!(
-            "Bat {pct}{st}",
-            pct = battery::percent().unwrap_or(0),
-            st = battery::state_label().unwrap_or(""),
-        )));
-        bat_label_inner.add_css_class("pill");
-        bat_label = Some(bat_label_inner.clone());
-        let bat_button = battery::pill(popup.clone(), bat_label_inner);
-        controls.append(&bat_button);
-    }
-
-    if network::available() {
-        let net_text = network::label_text().unwrap_or_else(|| "Net ".to_string());
-        let net_label_inner = Label::new(Some(&net_text));
-        net_label_inner.add_css_class("pill");
-        net_label = Some(net_label_inner.clone());
-        let net_button = network::pill(popup.clone(), net_label_inner);
-        controls.append(&net_button);
-    }
-
-    if let Some(logout_button) = logout::pill() {
-        controls.append(&logout_button);
-    }
-
-    let bat_label = bat_label; // move into the ticker closure
     glib::timeout_add_seconds_local(30, move || {
         if let Some(ref label) = bat_label {
             battery::refresh(label);
         }
         glib::ControlFlow::Continue
     });
-    let net_label = net_label; // move into the ticker closure
     glib::timeout_add_seconds_local(15, move || {
         if let Some(ref label) = net_label {
             network::refresh(label);
@@ -188,7 +140,6 @@ fn activate(app: &Application) {
 
     bar.window.present();
 }
-
 
 fn rebuild(container: &Box, state: &[ipc::Workspace], compositor: ipc::Compositor) {
     while let Some(child) = container.first_child() {
