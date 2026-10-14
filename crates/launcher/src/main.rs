@@ -39,7 +39,7 @@ fn activate(application: &Application, apps: &Rc<Vec<App>>) {
     if !ensure_supported() {
         std::process::exit(1);
     }
-    theme::init(STYLE);
+    theme::init(STYLE, "launcher");
 
     let launcher = LayerWindow::new(application).layer(Layer::Overlay);
     launcher.anchors(true, true, true, false);

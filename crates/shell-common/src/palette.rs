@@ -13,6 +13,11 @@ use std::path::PathBuf;
 
 const PALETTE_PATH: &str = "widgets/palette.css";
 
+/// The user-editable widget stylesheet path, `$HOME/.config/widgets/style.css`.
+/// When this file exists it is watched and reloaded at runtime, mirroring the
+/// palette hot-reload that already exists for `palette.css`.
+pub(crate) const STYLE_PATH: &str = "widgets/style.css";
+
 const FALLBACK: &str = r#"
 @define-color palette_bg #19120c;
 @define-color palette_fg #e8e1dd;
@@ -40,6 +45,16 @@ pub(crate) fn palette_file() -> Option<PathBuf> {
     let mut path = PathBuf::from(std::env::var_os("HOME")?);
     path.push(".config");
     path.push(PALETTE_PATH);
+    Some(path)
+}
+
+/// The user-editable widget stylesheet path, `$HOME/.config/widgets/style.css`.
+/// When this file exists it is watched and reloaded at runtime, mirroring the
+/// palette hot-reload that already exists for `palette.css`.
+pub(crate) fn style_file() -> Option<PathBuf> {
+    let mut path = PathBuf::from(std::env::var_os("HOME")?);
+    path.push(".config");
+    path.push(STYLE_PATH);
     Some(path)
 }
 
