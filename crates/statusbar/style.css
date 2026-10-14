@@ -56,7 +56,6 @@ button.ws.urgent:hover {
   letter-spacing: 0.02em;
   color: @palette_fg;
 }
-0 
 /* RAM and CPU, at the right-hand end: the same chips as the workspace ones, so
    the two ends of the bar read as one material. */
 .stats {
