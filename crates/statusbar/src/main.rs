@@ -36,7 +36,7 @@ fn activate(app: &Application) {
     if !ensure_supported() {
         std::process::exit(1);
     }
-    shell_common::theme::init(include_str!("../style.css"));
+    shell_common::theme::init(include_str!("../style.css"), "statusbar");
 
     let bar = LayerWindow::new(app);
     bar.anchors(true, true, true, false);

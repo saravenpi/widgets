@@ -12,6 +12,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `gaps inner`, so the statusbar, sidebar and launcher all inset by the same
   measure the window rectangles use on every exposed screen edge.
 
+## [0.7.0] - 2026-10-14
+
+### Added
+
+- Every widget now reads its own stylesheet from
+  `~/.config/widgets/<name>.css` (for example `~/.config/widgets/statusbar.css`)
+  when that file exists, and watches it for changes — copy any widget's
+  `style.css` there, edit it, and the widget restyles in place without a
+  restart. When the file is absent the widget falls back to its compiled-in
+  default, so the feature is optional.
+
+### Changed
+
+- The screen-edge gap is now 10 px in the widgets and in the sway config, so
+  the bar, the sidebar and the launcher all inset by the same measure the window
+  rectangles use on every exposed screen edge (`gaps outer 10`).
+
 ## [0.6.3] - 2026-10-13
 
 ### Changed

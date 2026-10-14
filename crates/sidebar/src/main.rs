@@ -109,7 +109,7 @@ fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32, sh
         instance::release(WIDGET);
         std::process::exit(1);
     }
-    shell_common::theme::init(include_str!("../style.css"));
+    shell_common::theme::init(include_str!("../style.css"), "sidebar");
 
     let layer = LayerWindow::new(app).layer(Layer::Overlay);
     layer.anchors(true, false, true, true);

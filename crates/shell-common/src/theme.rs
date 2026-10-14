@@ -20,7 +20,7 @@ use crate::palette;
 /// matching `gaps outer` in the compositor config. The bar is inset by it on
 /// every side, and the sidebar and its toasts keep it off the right and bottom
 /// edges so they float the same way.
-pub const GAP: i32 = 6;
+pub const GAP: i32 = 10;
 /// `gaps inner` in the compositor config, the same measure used between the bar
 /// and the windows it sits beside.
 pub const GAP_INNER: i32 = 10;
@@ -99,6 +99,10 @@ thread_local! {
     /// a reference to it: the widgets live for a whole session, so the slot
     /// lives as long as the process does.
     static PALETTE_MONITOR: RefCell<Option<gtk4::gio::FileMonitor>> = const { RefCell::new(None) };
+    /// The user-editable widget stylesheet monitor (`~/.config/widgets/style.css`).
+    /// When that file changes the widget restyles itself in place, the same as
+    /// a palette change does.
+    static STYLE_MONITOR: RefCell<Option<gtk4::gio::FileMonitor>> = const { RefCell::new(None) };
 }
 
 /// Style a widget: palette, then the shared base, then its own stylesheet.
@@ -108,9 +112,14 @@ thread_local! {
 /// `~/.config/widgets/palette.css`: when the file changes, the same document is
 /// rebuilt from the new palette and loaded back into the same provider, which
 /// restyles every widget on the display without a restart.
-pub fn init(widget_css: &'static str) {
-    let provider = palette::provider(&document(widget_css));
-    watch(provider, widget_css);
+///
+/// If `~/.config/widgets/<name>.css` exists it is used as the widget sheet
+/// instead of the compiled-in default, and it is watched for hot-reload — edit
+/// the file and the widget restyles itself in place.
+pub fn init(widget_css: &'static str, name: &str) {
+    let sheet = user_sheet(name).unwrap_or_else(|| widget_css.to_string());
+    let provider = palette::provider(&document(&sheet));
+    watch(provider, &sheet, name);
 }
 
 /// The full stylesheet: the palette first, then the base, then the widget's.
@@ -118,27 +127,68 @@ fn document(widget_css: &str) -> String {
     format!("{}\n{}\n{}", palette::palette_css(), BASE_CSS, widget_css)
 }
 
-/// Reload the palette on every change to `~/.config/widgets/palette.css`.
+/// The user-editable widget sheet, if they have placed one at
+/// `$HOME/.config/widgets/<name>.css`. When present it replaces the compiled-in
+/// default so the user's file is what the widget renders.
+fn user_sheet(name: &str) -> Option<String> {
+    let mut path = palette::style_file()?;
+    path.push(format!("{name}.css"));
+    std::fs::read_to_string(&path).ok()
+}
+
+/// Reload the whole stylesheet on every change to the palette or the user
+/// stylesheet (`~/.config/widgets/palette.css` or `~/.config/widgets/style.css`).
 ///
-/// A missing file is not an error: `palette::palette_css` answers with the
-/// built-in fallback until the file appears, and the monitor reports the
-/// creation, so a widget started before its first `palette sync` still picks
-/// the colours up.
-fn watch(provider: gtk4::CssProvider, widget_css: &'static str) {
-    let Some(path) = palette::palette_file() else {
+/// A missing file is not an error: the palette layer falls back to the built-in
+/// colours, and the user stylesheet layer is simply dropped when the file is
+/// absent (the widget keeps its shipped look). When the file appears later the
+/// monitor reports the creation and the widget picks it up.
+fn watch(provider: gtk4::CssProvider, widget_css: &str, name: &str) {
+    let doc = document(widget_css);
+    let palette_path = match palette::palette_file() {
+        Some(p) => p,
+        None => return,
+    };
+    let palette_monitor = gtk4::gio::File::for_path(palette_path)
+        .monitor_file(
+            gtk4::gio::FileMonitorFlags::NONE,
+            gtk4::gio::Cancellable::NONE,
+        );
+    let Ok(palette_monitor) = palette_monitor else {
         return;
     };
-    let monitor = gtk4::gio::File::for_path(path).monitor_file(
-        gtk4::gio::FileMonitorFlags::NONE,
-        gtk4::gio::Cancellable::NONE,
-    );
-    let Ok(monitor) = monitor else {
-        return;
-    };
-    monitor.connect_changed(move |_, _, _, _| {
-        provider.load_from_data(&document(widget_css));
+    let doc_for_palette = doc.clone();
+    let palette_provider = provider.clone();
+    palette_monitor.connect_changed(move |_, _, _, _| {
+        palette_provider.load_from_data(&doc_for_palette);
     });
-    PALETTE_MONITOR.with(|slot| *slot.borrow_mut() = Some(monitor));
+    PALETTE_MONITOR.with(|slot| *slot.borrow_mut() = Some(palette_monitor));
+
+    // Watch the user-editable widget stylesheet, if it exists.
+    let style_path = match palette::style_file() {
+        Some(dir) => {
+            let mut p = dir;
+            p.push(format!("{name}.css"));
+            p
+        }
+        None => return,
+    };
+    if std::fs::metadata(&style_path).is_ok() {
+        let style_monitor = gtk4::gio::File::for_path(style_path)
+            .monitor_file(
+                gtk4::gio::FileMonitorFlags::NONE,
+                gtk4::gio::Cancellable::NONE,
+            );
+        let Ok(style_monitor) = style_monitor else {
+            return;
+        };
+        let doc_for_style = doc.clone();
+        let style_provider = provider.clone();
+        style_monitor.connect_changed(move |_, _, _, _| {
+            style_provider.load_from_data(&doc_for_style);
+        });
+        STYLE_MONITOR.with(|slot| *slot.borrow_mut() = Some(style_monitor));
+    }
 }
 
 #[cfg(test)]
