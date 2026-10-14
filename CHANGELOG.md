@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.6] - 2026-10-14
+
+### Changed
+
+- Matched the bar gap to the compositor's `gaps outer` (6 px) rather than
+  `gaps inner`, so the statusbar, sidebar and launcher all inset by the same
+  measure the window rectangles use on every exposed screen edge.
+
 ## [0.6.3] - 2026-10-13
 
 ### Changed
