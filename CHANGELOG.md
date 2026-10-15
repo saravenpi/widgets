@@ -6,6 +6,36 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-10-15
+
+### Added
+
+- `statusbar --diagnose`: what the bar placed and what it did not. Every control
+  pill is placed only when its backend answers, and an icon is drawn only when its
+  artwork reaches a texture, so a bar with a gap in its row and a bar whose glyphs
+  never arrived look the same from outside — and neither says anything while it
+  happens. The report names each control, whether it is in the row and why or why
+  not, whether every glyph paints and at what size, the compositor, the display
+  and the renderer, and whether the machine is virtualised. It never opens a
+  window, so it is safe to run beside a bar that is already up.
+- `statusbar`: the network pill no longer needs a network manager. `nmcli`
+  (NetworkManager) and `networkctl` (systemd-networkd) are the first two sources
+  and the kernel's own interfaces under `/sys/class/net` are the third, so the
+  pill appears on a machine that runs neither — Alpine's default, or a virtual
+  machine with one virtio link — where it used to be left out of the row. A link
+  that is up is the one reported, hardware outranks the bridges and pairs a
+  container runtime leaves behind, and a machine with nothing up reports its link
+  as down rather than dropping the pill.
+
+### Fixed
+
+- `statusbar`: the volume pill is placed only when `pactl` actually answers for a
+  sink, not merely when the binary exists. A `pactl` with no server to reach
+  exited non-zero, and the pill built on it read nothing and moved nothing.
+- The README says what to do when the bar looks wrong on a virtual machine: GTK4's
+  renderer wants OpenGL 3.3 and a virtual GPU may expose 2.1, which arrives as
+  missing content rather than as an error.
+
 ## [0.9.3] - 2026-10-15
 
 ### Fixed
