@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project
 adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `statusbar`: the control icons follow the palette. They are drawn as
+  rasterized bitmaps rather than stylesheet rules, so `palette sync` used to
+  restyle the bar around them and leave the glyphs on the old ink until the bar
+  was restarted; the pill now hands its icon to `icons::follow_palette`, which
+  paints it again whenever the stylesheet is rebuilt.
+- The stylesheet reload builds the document from the files again instead of
+  loading back the one captured at start-up. A widget that was already up kept
+  the palette it started with: the file was watched, and the change was thrown
+  away. The same held for a sheet the user edited by hand.
+- `shell-common`: a widget's own sheet is read from
+  `~/.config/widgets/<name>.css`. The path appended the widget name to
+  `style.css`, which is a file rather than a directory, so it never resolved and
+  a sheet the user placed was never picked up.
+
 ## [0.9.1] - 2026-10-15
 
 ### Added

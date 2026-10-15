@@ -1,13 +1,16 @@
 //! The bar itself: the modules on it, the timers that keep them current, and the
 //! workspace chips that follow the compositor.
 
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::{Application, Box, Label};
 
 use crate::ipc;
 use crate::popup;
-use crate::{control, stats};
+use crate::{control, icons, stats};
 
 /// Everything on the bar that has to outlive the function that builds it. The
 /// label fields are the ones a ticker reaches back into.
@@ -41,7 +44,13 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     clock.set_halign(gtk4::Align::Center);
 
     let (stats_row, ram, cpu) = stats_row();
-    let controls = control::build(&popup::Popup::new(app));
+    // The pills collect their glyphs in here, and the hook holds the same set:
+    // the icons are drawn rather than styled, so they cannot follow the cascade
+    // the way the labels do, and this is what repaints them every time the
+    // stylesheet is rebuilt.
+    let painted = Rc::new(RefCell::new(icons::Painted::default()));
+    icons::follow_palette(painted.clone());
+    let controls = control::build(&popup::Popup::new(app), &painted);
 
     root.append(&workspaces);
     root.append(&clock);

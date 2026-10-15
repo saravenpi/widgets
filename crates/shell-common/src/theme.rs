@@ -8,11 +8,13 @@
 //! [`init`] loads the three layers into a single provider and then watches the
 //! palette file. `palette sync` rewrites that file whenever the wallpaper or the
 //! palette changes, so a running widget restyles itself instead of waiting for a
-//! restart.
+//! restart. The reload rereads what it is built from — see [`rebuild`] — because
+//! a document captured at start-up would be loaded back unchanged, which is the
+//! same as not watching at all.
 
 use std::cell::RefCell;
 
-use gtk4::prelude::*;
+mod watch;
 
 use crate::palette;
 
@@ -93,23 +95,16 @@ button:disabled {
 "#;
 
 thread_local! {
-    /// The palette file monitor, kept alive for the life of the process.
-    ///
-    /// `FileMonitor` stops watching when it is dropped, and nothing else holds
-    /// a reference to it: the widgets live for a whole session, so the slot
-    /// lives as long as the process does.
-    static PALETTE_MONITOR: RefCell<Option<gtk4::gio::FileMonitor>> = const { RefCell::new(None) };
-    /// The user-editable widget stylesheet monitor (`~/.config/widgets/style.css`).
-    /// When that file changes the widget restyles itself in place, the same as
-    /// a palette change does.
-    static STYLE_MONITOR: RefCell<Option<gtk4::gio::FileMonitor>> = const { RefCell::new(None) };
+    /// The callbacks to run after the stylesheet is rebuilt, in the order they
+    /// were registered. See [`on_reload`].
+    static RELOADS: RefCell<Vec<Box<dyn Fn()>>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Style a widget: palette, then the shared base, then its own stylesheet.
 ///
 /// The three layers go into a single provider, so the widget sheet always wins
 /// over the base and both win over nothing else. The provider is then tied to
-/// `~/.config/widgets/palette.css`: when the file changes, the same document is
+/// `~/.config/widgets/palette.css`: when the file changes, the document is
 /// rebuilt from the new palette and loaded back into the same provider, which
 /// restyles every widget on the display without a restart.
 ///
@@ -117,9 +112,32 @@ thread_local! {
 /// instead of the compiled-in default, and it is watched for hot-reload — edit
 /// the file and the widget restyles itself in place.
 pub fn init(widget_css: &'static str, name: &str) {
-    let sheet = user_sheet(name).unwrap_or_else(|| widget_css.to_string());
-    let provider = palette::provider(&document(&sheet));
-    watch(provider, &sheet, name);
+    let provider = palette::provider(&rebuild(name, widget_css));
+    watch::watch(provider, name, widget_css);
+}
+
+/// Run `callback` after every stylesheet rebuild: a `palette sync`, or an edit
+/// to the user's own sheet.
+///
+/// Most of what a widget draws follows the cascade by itself and needs nothing
+/// here. This is for the parts that cannot: a bitmap is a fixed texture rather
+/// than a rule, so the only way it takes the new palette is to be drawn again.
+/// The statusbar's icons are the case that made this necessary.
+///
+/// A callback must not register another one — the list is borrowed while they
+/// run.
+pub fn on_reload(callback: impl Fn() + 'static) {
+    RELOADS.with(|slot| slot.borrow_mut().push(Box::new(callback)));
+}
+
+/// The stylesheet a widget draws itself from, read from disk now: the palette,
+/// the shared base, and the widget's own sheet.
+///
+/// Read rather than remembered. Both `init` and the reload go through here, so
+/// what is loaded on a change is the files as they are, not a copy of what they
+/// said when the widget started.
+pub(crate) fn rebuild(name: &str, default: &str) -> String {
+    document(&user_sheet(name).unwrap_or_else(|| default.to_string()))
 }
 
 /// The full stylesheet: the palette first, then the base, then the widget's.
@@ -127,71 +145,20 @@ fn document(widget_css: &str) -> String {
     format!("{}\n{}\n{}", palette::palette_css(), BASE_CSS, widget_css)
 }
 
-/// The user-editable widget sheet, if they have placed one at
-/// `$HOME/.config/widgets/<name>.css`. When present it replaces the compiled-in
-/// default so the user's file is what the widget renders.
+/// The sheet the user placed at `$HOME/.config/widgets/<name>.css`. When present
+/// it replaces the compiled-in default so the user's file is what the widget
+/// renders.
 fn user_sheet(name: &str) -> Option<String> {
-    let mut path = palette::style_file()?;
-    path.push(format!("{name}.css"));
-    std::fs::read_to_string(&path).ok()
+    std::fs::read_to_string(palette::sheet_file(name)?).ok()
 }
 
-/// Reload the whole stylesheet on every change to the palette or the user
-/// stylesheet (`~/.config/widgets/palette.css` or `~/.config/widgets/style.css`).
-///
-/// The monitors end up in the thread-locals above, which is what keeps them
-/// alive: a `FileMonitor` stops watching the moment it is dropped, and nothing
-/// else holds a reference to these.
-fn watch(provider: gtk4::CssProvider, widget_css: &str, name: &str) {
-    let doc = document(widget_css);
-    if let Some(monitor) = watch_palette(&provider, &doc) {
-        PALETTE_MONITOR.with(|slot| *slot.borrow_mut() = Some(monitor));
-    }
-    if let Some(monitor) = watch_user_sheet(&provider, &doc, name) {
-        STYLE_MONITOR.with(|slot| *slot.borrow_mut() = Some(monitor));
-    }
-}
-
-/// Watch the palette. Reloading the same provider with the rebuilt document is
-/// what restyles every widget on the display, with no restart.
-fn watch_palette(provider: &gtk4::CssProvider, doc: &str) -> Option<gtk4::gio::FileMonitor> {
-    let monitor = monitor_file(palette::palette_file()?)?;
-    reload_on_change(&monitor, provider, doc);
-    Some(monitor)
-}
-
-/// Watch the user's own sheet at `$HOME/.config/widgets/<name>.css`, when they
-/// have placed one. A missing file is not an error: the widget keeps its shipped
-/// look, and nothing is watched until the file appears.
-fn watch_user_sheet(
-    provider: &gtk4::CssProvider,
-    doc: &str,
-    name: &str,
-) -> Option<gtk4::gio::FileMonitor> {
-    let mut path = palette::style_file()?;
-    path.push(format!("{name}.css"));
-    if std::fs::metadata(&path).is_err() {
-        return None;
-    }
-    let monitor = monitor_file(path)?;
-    reload_on_change(&monitor, provider, doc);
-    Some(monitor)
-}
-
-fn monitor_file(path: std::path::PathBuf) -> Option<gtk4::gio::FileMonitor> {
-    gtk4::gio::File::for_path(path)
-        .monitor_file(
-            gtk4::gio::FileMonitorFlags::NONE,
-            gtk4::gio::Cancellable::NONE,
-        )
-        .ok()
-}
-
-/// Load `doc` back into `provider` on every change the monitor reports.
-fn reload_on_change(monitor: &gtk4::gio::FileMonitor, provider: &gtk4::CssProvider, doc: &str) {
-    let provider = provider.clone();
-    let doc = doc.to_string();
-    monitor.connect_changed(move |_, _, _, _| provider.load_from_data(&doc));
+/// Tell every listener the stylesheet moved under them.
+fn notify_reload() {
+    RELOADS.with(|slot| {
+        for callback in slot.borrow().iter() {
+            callback();
+        }
+    });
 }
 
 #[cfg(test)]

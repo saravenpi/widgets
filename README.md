@@ -193,10 +193,11 @@ itself the moment `palette sync` rewrites it — no restart, no compositor reloa
 required. A file that does not exist yet is watched too, so a widget started
 before its first sync picks the colors up when it appears.
 
-The statusbar's control icons are the one exception. They are rasterized
-bitmaps, not stylesheet rules, so they take their ink once, when the bar is
-built: a `palette sync` restyles the bar around them, and restarting the bar is
-what retints the glyphs themselves.
+The statusbar's control icons are rasterized bitmaps rather than stylesheet
+rules, so they cannot follow the cascade the way the labels beside them do. The
+bar draws them again whenever the stylesheet is rebuilt, so a `palette sync`
+moves the glyphs and the text together instead of leaving the icons a release
+behind.
 
 ## Running
 

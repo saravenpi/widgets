@@ -9,6 +9,8 @@ mod network;
 mod popup;
 mod stats;
 mod sysfs;
+#[cfg(test)]
+mod testing;
 mod volume;
 
 use gtk4::prelude::*;

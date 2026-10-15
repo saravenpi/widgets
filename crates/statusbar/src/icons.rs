@@ -7,9 +7,13 @@
 //!
 //! The tint is the palette's `palette_fg`, substituted into the body's
 //! `fill="currentColor"` before rasterizing. A texture is a fixed bitmap, so it
-//! cannot follow the stylesheet cascade: the icons are read once when the bar is
-//! built, and a later `palette sync` restyles the text but not the glyphs. A
-//! restart is what retints them.
+//! cannot follow the stylesheet cascade the way the label beside it does. The
+//! icons are drawn once and drawn again by [`follow_palette`] whenever the
+//! stylesheet is rebuilt, so a `palette sync` moves the glyphs and the text
+//! together instead of leaving the icons a release behind.
+
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use gtk4::gdk::RGBA;
 use gtk4::gdk_pixbuf;
@@ -40,14 +44,49 @@ impl Icon {
     }
 }
 
-/// A 24×24 `Image` painting the icon in the palette foreground — the same ink as
-/// the label beside it. A neutral grey stands in when the palette cannot be
-/// parsed, so a pill is never left without its icon. `None` when the icon cannot
-/// be rasterized at all, so the caller can fall back to a label-only pill.
-pub fn image(icon: Icon) -> Option<gtk4::Image> {
-    let tint = shell_common::palette::palette_fg_rgba().unwrap_or_else(|| RGBA::new(0.5, 0.5, 0.5, 1.0));
-    let texture = texture(icon, &tint)?;
-    Some(gtk4::Image::from_paintable(Some(&texture)))
+/// The icons a widget has painted, remembered so a palette change can repaint
+/// them.
+///
+/// A pill asks for its image once, when the bar is built; the images it gets
+/// back stay in here, which is what lets [`retint`](Painted::retint) find them
+/// again after the palette has moved.
+#[derive(Default)]
+pub struct Painted(Vec<(Icon, gtk4::Image)>);
+
+impl Painted {
+    /// Paint `icon` in the palette's current foreground, and remember it. `None`
+    /// when the icon cannot be rasterized at all, so the caller can fall back to
+    /// a label-only pill.
+    pub fn image(&mut self, icon: Icon) -> Option<gtk4::Image> {
+        let image = gtk4::Image::from_paintable(Some(&texture(icon, &tint())?));
+        self.0.push((icon, image.clone()));
+        Some(image)
+    }
+
+    /// Draw every icon again in the palette's current foreground.
+    pub fn retint(&self) {
+        let tint = tint();
+        for (icon, image) in &self.0 {
+            if let Some(texture) = texture(*icon, &tint) {
+                image.set_paintable(Some(&texture));
+            }
+        }
+    }
+}
+
+/// Repaint `icons` every time the stylesheet is rebuilt.
+///
+/// The labels follow the cascade on their own; a texture cannot, so this is what
+/// brings the glyphs along when `palette sync` rewrites `palette.css` — and what
+/// keeps them from being a restart behind the bar they sit on.
+pub fn follow_palette(icons: Rc<RefCell<Painted>>) {
+    shell_common::theme::on_reload(move || icons.borrow().retint());
+}
+
+/// The ink the glyphs are drawn in: the palette's foreground, or a neutral grey
+/// when it cannot be parsed, so a pill is never left without its icon.
+fn tint() -> RGBA {
+    shell_common::palette::palette_fg_rgba().unwrap_or_else(|| RGBA::new(0.5, 0.5, 0.5, 1.0))
 }
 
 /// The tinted 24×24 `Texture` for one icon.
@@ -84,55 +123,4 @@ fn rasterize(svg: &[u8]) -> Option<gdk_pixbuf::Pixbuf> {
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    /// Every icon the bar uses has to rasterize to a 24×24 bitmap with ink on
-    /// it. Without this, a missing SVG loader or a body that no longer paints
-    /// would show up as a blank pill and nothing else would notice — the icons
-    /// are the one part of the bar no stylesheet check touches.
-    #[test]
-    fn every_icon_rasterizes_with_visible_pixels() {
-        let icons = [
-            Icon::Battery,
-            Icon::Brightness,
-            Icon::Volume,
-            Icon::Network,
-            Icon::Logout,
-        ];
-        for icon in icons {
-            let doc = svg_with_tint(icon.svg(), &RGBA::new(1.0, 1.0, 1.0, 1.0));
-            let pixbuf =
-                rasterize(doc.as_bytes()).unwrap_or_else(|| panic!("{icon:?} did not rasterize"));
-            assert_eq!(
-                (pixbuf.width(), pixbuf.height()),
-                (24, 24),
-                "{icon:?} is not 24×24"
-            );
-            assert!(pixbuf.has_alpha(), "{icon:?} lost its alpha channel");
-            let channels = pixbuf.n_channels() as usize;
-            let pixels = pixbuf.read_pixel_bytes();
-            assert!(
-                pixels.chunks(channels).any(|pixel| pixel[channels - 1] > 0),
-                "{icon:?} rasterized to an empty bitmap"
-            );
-        }
-    }
-
-    /// The tint has to reach the glyph: if it did not, the icons would render
-    /// white-on-transparent and be invisible on a light palette.
-    #[test]
-    fn the_tint_replaces_the_bodies_colour() {
-        let doc = svg_with_tint(Icon::Battery.svg(), &RGBA::new(1.0, 0.0, 0.0, 1.0));
-        assert!(doc.contains("#ff0000"), "the tint was not substituted in");
-        assert!(!doc.contains("currentColor"), "currentColor was left behind");
-    }
-
-    /// A body that cannot be rasterized has to come back as `None` rather than
-    /// panicking, because that is what lets the pill fall back to its label.
-    #[test]
-    fn unparseable_svg_is_none() {
-        assert!(rasterize(b"<svg>not svg at all").is_none());
-    }
-
-}
+mod tests;

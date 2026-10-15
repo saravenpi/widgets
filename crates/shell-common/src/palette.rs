@@ -11,14 +11,13 @@
 
 use std::path::PathBuf;
 
-const PALETTE_PATH: &str = "widgets/palette.css";
+/// Where the palette and the user's own widget sheets live, under `$HOME`.
+const CONFIG_DIR: &str = ".config/widgets";
 
-/// The user-editable widget stylesheet path, `$HOME/.config/widgets/style.css`.
-/// When this file exists it is watched and reloaded at runtime, mirroring the
-/// palette hot-reload that already exists for `palette.css`.
-pub(crate) const STYLE_PATH: &str = "widgets/style.css";
+/// The generated palette's name inside that directory.
+const PALETTE_FILE: &str = "palette.css";
 
-const FALLBACK: &str = r#"
+pub(crate) const FALLBACK: &str = r#"
 @define-color palette_bg #19120c;
 @define-color palette_fg #e8e1dd;
 @define-color palette_cursor #ffc079;
@@ -40,22 +39,23 @@ const FALLBACK: &str = r#"
 @define-color palette_color15 #fcf5f4;
 "#;
 
-/// The palette stylesheet's path, `$HOME/.config/widgets/palette.css`.
-pub(crate) fn palette_file() -> Option<PathBuf> {
+/// `$HOME/.config/widgets`, where both files below live.
+pub(crate) fn config_dir() -> Option<PathBuf> {
     let mut path = PathBuf::from(std::env::var_os("HOME")?);
-    path.push(".config");
-    path.push(PALETTE_PATH);
+    path.push(CONFIG_DIR);
     Some(path)
 }
 
-/// The user-editable widget stylesheet path, `$HOME/.config/widgets/style.css`.
-/// When this file exists it is watched and reloaded at runtime, mirroring the
-/// palette hot-reload that already exists for `palette.css`.
-pub(crate) fn style_file() -> Option<PathBuf> {
-    let mut path = PathBuf::from(std::env::var_os("HOME")?);
-    path.push(".config");
-    path.push(STYLE_PATH);
-    Some(path)
+/// The palette stylesheet's path, `$HOME/.config/widgets/palette.css`.
+pub(crate) fn palette_file() -> Option<PathBuf> {
+    Some(config_dir()?.join(PALETTE_FILE))
+}
+
+/// A widget's own sheet, `$HOME/.config/widgets/<name>.css`. When the user places
+/// one it replaces the sheet the widget ships and is watched for hot-reload,
+/// mirroring the palette hot-reload that already exists for `palette.css`.
+pub(crate) fn sheet_file(name: &str) -> Option<PathBuf> {
+    Some(config_dir()?.join(format!("{name}.css")))
 }
 
 /// The palette stylesheet, or the built-in fallback when it is missing.

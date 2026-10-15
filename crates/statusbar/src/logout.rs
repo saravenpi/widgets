@@ -1,6 +1,8 @@
 //! Logout pill for the statusbar: ends the current seat/session via `loginctl`.
 
+use std::cell::RefCell;
 use std::process::{Command, Stdio};
+use std::rc::Rc;
 
 use gtk4::prelude::*;
 use gtk4::{Box, Button, Label, Orientation};
@@ -36,7 +38,10 @@ pub fn session_id() -> Option<String> {
 
 /// Build a logout pill. Returns `None` when the session cannot be ended, so the
 /// caller can leave the bar without a dead button.
-pub fn pill() -> Option<Button> {
+///
+/// `painted` collects the glyph, like every other pill's, so the palette can
+/// reach it later; see [`icons::follow_palette`].
+pub fn pill(painted: &Rc<RefCell<icons::Painted>>) -> Option<Button> {
     let sid = session_id()?;
     if !available() {
         return None;
@@ -44,7 +49,7 @@ pub fn pill() -> Option<Button> {
 
     let label = Label::new(Some("Logout"));
     let child = Box::new(Orientation::Horizontal, 4);
-    if let Some(image) = icons::image(icons::Icon::Logout) {
+    if let Some(image) = painted.borrow_mut().image(icons::Icon::Logout) {
         child.append(&image);
     }
     child.append(&label);
