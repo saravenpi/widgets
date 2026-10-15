@@ -6,6 +6,26 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-10-15
+
+### Fixed
+
+- `statusbar`: the gaps on the bar are one measure. The CPU and memory pills and
+  the control row were appended to the bar one after the other with no gap
+  between them, so the RAM pill sat welded to the volume pill while every other
+  pair on the bar had a gap of its own; inside a module the gap was 6 px, off the
+  4/8/12/16/24 scale the shared sheet documents. Every pair of modules and every
+  pair of pills is now `shell_common::theme::MODULE_GAP` (8), which is where the
+  two halves of the right-hand end also became one module.
+- `statusbar`: the clock sits in the middle of the bar. The bar was a row of
+  expanding children, and the spare width went to three of them, so the clock
+  landed wherever the wider right-hand end left it — around 100 px off centre.
+  The bar is a centre box now: workspaces, clock, right-hand controls.
+- `statusbar`: the CPU and memory readings are pills again. The sheet that
+  carries `.pill` never ruled `.stat`, so unless the machine had a
+  `~/.config/widgets/statusbar.css` of its own, the two labels came out as bare
+  text beside a row of pills: none of the material and not the same height.
+
 ## [0.10.0] - 2026-10-15
 
 ### Added
