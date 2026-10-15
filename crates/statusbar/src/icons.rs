@@ -34,6 +34,16 @@ pub enum Icon {
     Logout,
 }
 
+/// Every icon, in the order the control row reads them. One list, so a new icon
+/// is added in one place and the checks and the diagnostic report both follow.
+pub const ALL: [Icon; 5] = [
+    Icon::Battery,
+    Icon::Brightness,
+    Icon::Volume,
+    Icon::Network,
+    Icon::Logout,
+];
+
 impl Icon {
     /// The icon's 24×24 mask, the artwork it paints from.
     fn mask(self) -> &'static str {
@@ -84,12 +94,12 @@ pub fn follow_palette(icons: Rc<RefCell<Painted>>) {
 
 /// The ink the glyphs are drawn in: the palette's foreground, or a neutral grey
 /// when it cannot be parsed, so a pill is never left without its icon.
-fn tint() -> RGBA {
+pub(crate) fn tint() -> RGBA {
     shell_common::palette::palette_fg_rgba().unwrap_or_else(|| RGBA::new(0.5, 0.5, 0.5, 1.0))
 }
 
 /// The 24×24 texture one icon paints as.
-fn texture(icon: Icon, tint: &RGBA) -> Texture {
+pub(crate) fn texture(icon: Icon, tint: &RGBA) -> Texture {
     let pixels = glib::Bytes::from(&rgba(icon, tint)[..]);
     let stride = SIDE as usize * 4;
     MemoryTexture::new(

@@ -20,11 +20,15 @@ pub fn percent() -> Option<u16> {
 
 /// Whether `pactl` is present and can talk to a sink. When it is not, the pill
 /// is hidden rather than showing a broken control.
+///
+/// The exit status is what settles it, not whether the command could be run: a
+/// `pactl` that is installed but has no server to reach prints an error and fails,
+/// and a pill built on it would read nothing and move nothing.
 pub fn available() -> bool {
     Command::new("pactl")
         .args(["get-sink-volume", "@DEFAULT_SINK@"])
         .output()
-        .is_ok()
+        .is_ok_and(|out| out.status.success())
 }
 
 /// Move the default sink by one fixed step. Each call is its own `pactl` so a

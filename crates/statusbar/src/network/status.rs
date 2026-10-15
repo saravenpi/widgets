@@ -1,7 +1,11 @@
 //! Where the network state comes from: NetworkManager's `nmcli` when it answers,
-//! `networkctl` (systemd-networkd) otherwise. Nothing here formats or draws.
+//! `networkctl` (systemd-networkd) otherwise, and the kernel's own interfaces
+//! when neither daemon is installed — see [`super::link`]. Nothing here formats
+//! or draws.
 
 use std::process::Command;
+
+use super::link;
 
 /// A network manager's view of the connection.
 pub(super) struct NetState {
@@ -9,7 +13,7 @@ pub(super) struct NetState {
     pub(super) name: String,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub(super) enum StateKind {
     Connected,
     Connecting,
@@ -18,9 +22,9 @@ pub(super) enum StateKind {
     Unknown,
 }
 
-/// The current state, or `None` when neither manager can be reached.
+/// The current state, or `None` when no manager and no interface can answer.
 pub(super) fn state() -> Option<NetState> {
-    nm_state().or_else(netctl_state)
+    nm_state().or_else(netctl_state).or_else(link::state)
 }
 
 fn nm_state() -> Option<NetState> {

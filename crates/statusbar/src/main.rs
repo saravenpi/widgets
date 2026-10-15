@@ -2,6 +2,7 @@ mod bar;
 mod battery;
 mod brightness;
 mod control;
+mod diagnose;
 mod icons;
 mod ipc;
 mod logout;
@@ -28,6 +29,13 @@ fn main() {
             env!("CARGO_PKG_NAME"),
             env!("CARGO_PKG_VERSION")
         );
+        return;
+    }
+    // Asking the bar what it can see is a read, not a run: it answers with the
+    // pills this machine has and whether the icons paint, and it is worth having
+    // when a bar is already up (which is exactly when something looks wrong).
+    if std::env::args().skip(1).any(|arg| arg == "--diagnose") {
+        print!("{}", diagnose::report());
         return;
     }
     // The bar is a singleton: a compositor that runs it twice (a reload, a

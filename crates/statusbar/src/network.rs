@@ -2,6 +2,7 @@
 //! the SSID, and opens a detail popup on click. The probing and the wording live
 //! in [`status`] and [`text`].
 
+mod link;
 mod status;
 mod text;
 
@@ -10,8 +11,10 @@ use gtk4::{Box, Label, Orientation};
 
 use crate::popup::Popup;
 
-/// Whether a network manager we can talk to is present. When it is not, the pill
-/// is hidden rather than showing a dead control.
+/// Whether a network state can be read at all: from NetworkManager, from
+/// systemd-networkd, or from the kernel's own interfaces when neither daemon is
+/// running. When none of them answers, the pill is hidden rather than showing a
+/// dead control.
 pub fn available() -> bool {
     status::state().is_some()
 }

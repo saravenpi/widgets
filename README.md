@@ -259,16 +259,86 @@ rather than showing a stale number.
   — a charge threshold, usually — and `Dis` on its own cells. Click for a popup
   with the percent, a fill bar and the time-to-full / time-to-empty when the
   kernel reports it and the battery is actually moving.
-- **Network** reads NetworkManager through `nmcli` and falls back to
-  `networkctl` (systemd-networkd). It shows the connection state and, when
-  connected, the Wi-Fi SSID or interface name, and ticks every 15 seconds; click for
-  a popup with the state and interface.
+- **Network** reads NetworkManager through `nmcli`, falls back to
+  `networkctl` (systemd-networkd), and falls back again to the kernel's own
+  interfaces under `/sys/class/net`. A minimal install — Alpine's default, or a
+  virtual machine with a single virtio link — runs no network manager at all, and
+  the pill used to be left out of the row entirely on those machines. It shows the
+  connection state and, when connected, the Wi-Fi SSID or interface name, and
+  ticks every 15 seconds; click for a popup with the state and interface.
 - **Logout** ends the current session through
   `loginctl terminate-session $XDG_SESSION_ID` — the same action a compositor
   logout binding (`mod+shift+e`) should map to — and carries the power glyph. The
   bar only places it when `loginctl` can describe the session, and asking that is
   a read: the button never ends the session just to prove it could. It is hidden
   when the session id is unknown or `loginctl` is absent.
+
+### When something is missing
+
+A control pill is placed only when its backend answers, and a pill whose icon
+cannot be painted simply omits the icon, so a bar with a gap and a bar whose
+glyphs never arrived look the same from outside. `statusbar --diagnose` prints
+which one it is — every control, whether it is in the row and why or why not,
+whether each glyph reaches a texture, the compositor, and whether the machine is
+virtualised:
+
+```sh
+statusbar --diagnose
+```
+
+```text
+statusbar 0.10.0
+compositor: Sway
+machine: virtual (QEMU Standard PC (Q35 + ICH9, 2009))
+display: wayland
+GSK_RENDERER: unset, GTK chooses
+pills
+  volume     absent  no pactl, or nothing for it to answer for (pulseaudio-utils, pipewire-pulse)
+  brightness absent  nothing writable in /sys/class/backlight (a virtual machine has none)
+  battery    absent  no BAT device in /sys/class/power_supply (a virtual machine has none)
+  network    placed  a link answers
+  logout     absent  $XDG_SESSION_ID is unset, or loginctl is missing (elogind)
+  the network pill reads: Net On eth0
+glyphs
+  battery    24×24
+  brightness 24×24
+  volume     24×24
+  network    24×24
+  logout     24×24
+```
+
+It reads and reports; it never draws a window, so it is safe to run next to a bar
+that is already up. Without a display it says so instead of guessing at the
+glyphs.
+
+### Virtual machines
+
+A VM is where the widgets are most likely to look wrong, and for two reasons that
+are worth telling apart.
+
+**The bar has fewer pills, by design.** A virtual machine has no battery, no
+backlight, and often no audio server or network manager, so those pills are left
+out rather than drawn dead. `--diagnose` above names each one. On a minimal
+Alpine guest, expect a row of only what is actually there.
+
+**GTK4 needs OpenGL 3.3, and a virtual GPU may not have it.** Since UTM 4.7.5
+(QEMU 10) the `virtio-gpu` display exposes OpenGL **2.1**, below what GTK4's NGL
+renderer requires, which shows up as missing or corrupted window content rather
+than as an error ([utmapp/UTM#7691][utm-gl]). A bar whose compositor renders in
+software is not exempt: `WLR_RENDERER=pixman` settles how *sway* draws, not how
+GTK draws. Start the widgets with one of these, which forces a renderer that does
+not need 3.3:
+
+```sh
+GSK_RENDERER=cairo statusbar          # GTK's CPU renderer
+LIBGL_ALWAYS_SOFTWARE=1 statusbar     # Mesa's llvmpipe, which reports 3.3+
+```
+
+Either works for a shell widget at this size, and both are plain environment
+variables, so put the one that works in the compositor's exec line. On the host,
+turning 3D acceleration off for the VM is the other end of the same fix.
+
+[utm-gl]: https://github.com/utmapp/UTM/issues/7691
 
 ### The sidebar
 

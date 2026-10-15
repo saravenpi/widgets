@@ -11,15 +11,6 @@ use gtk4::{gdk_pixbuf, gio};
 use super::*;
 use crate::testing;
 
-/// The icons the bar draws, so a new one is added here as well as to the enum.
-const ICONS: [Icon; 5] = [
-    Icon::Battery,
-    Icon::Brightness,
-    Icon::Volume,
-    Icon::Network,
-    Icon::Logout,
-];
-
 /// Every icon has to decode to a full 24×24 frame with ink on it, and the five
 /// have to be five different pictures.
 ///
@@ -29,7 +20,7 @@ const ICONS: [Icon; 5] = [
 #[test]
 fn every_icon_decodes_to_a_full_frame_of_its_own() {
     let mut seen: Vec<&str> = Vec::new();
-    for icon in ICONS {
+    for icon in ALL {
         let pixels = rgba(icon, &RGBA::new(1.0, 1.0, 1.0, 1.0));
         assert_eq!(
             pixels.len(),
