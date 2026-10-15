@@ -6,6 +6,18 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.3] - 2026-10-15
+
+### Fixed
+
+- `statusbar`: the control icons are compiled into the binary as the 24×24 masks
+  they rasterize to, so nothing is decoded at run time. They used to be
+  rasterized from their SVG bodies through gdk-pixbuf's SVG loader, which is a
+  separate package on most distributions (`librsvg` on many of them) and not
+  something GTK pulls in on its own: on a machine without it the rasterization
+  failed, and a pill that cannot draw its icon simply omits it, so the bar showed
+  every label and no glyph and printed nothing to say why.
+
 ## [0.9.2] - 2026-10-15
 
 ### Fixed
