@@ -6,6 +6,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-10-15
+
 ### Fixed
 
 - `statusbar`: the battery pill says when the machine is plugged in. The adapter
@@ -31,6 +33,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `~/.config/widgets/<name>.css`. The path appended the widget name to
   `style.css`, which is a file rather than a directory, so it never resolved and
   a sheet the user placed was never picked up.
+
+### Changed
+
+- Tests that build widgets run their body on one toolkit thread instead of
+  calling GTK from whichever test thread reached it first, and report the same
+  quiet stand-down when there is no display.
 
 ## [0.9.1] - 2026-10-15
 
