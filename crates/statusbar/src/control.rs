@@ -135,9 +135,13 @@ mod tests {
 
     /// A pill wired to a real popup, with counters standing in for a control's
     /// `show` and `refresh` so the test can tell how often each ran.
-    fn wired_pill() -> (gtk4::Button, Label, Popup, Rc<Cell<u32>>) {
+    ///
+    /// `application_id` has to differ between the tests that call this: an
+    /// application is exported on the bus by id, so two of them claiming the same
+    /// one in a single run makes the second refuse to register.
+    fn wired_pill(application_id: &str) -> (gtk4::Button, Label, Popup, Rc<Cell<u32>>) {
         let application = gtk4::Application::builder()
-            .application_id("dev.saravenpi.ControlPillTest")
+            .application_id(application_id)
             .build();
         application
             .register(None::<&gio::Cancellable>)
@@ -175,7 +179,7 @@ mod tests {
     #[test]
     fn clicking_a_pill_shows_the_popup_and_refreshes_the_label() {
         let ran = crate::testing::on_gtk_thread(|| {
-            let (button, label, popup, refreshes) = wired_pill();
+            let (button, label, popup, refreshes) = wired_pill("dev.saravenpi.ControlPillTest");
 
             assert_eq!(refreshes.get(), 1, "the pill refreshes itself once, when built");
             assert_eq!(label.text().as_str(), "refresh 1", "and paints what it read");
@@ -189,6 +193,49 @@ mod tests {
         });
         if !ran {
             eprintln!("statusbar: no display, skipping the control pill test");
+        }
+    }
+
+    /// A pill has to carry its glyph on screen, next to the label it ticks.
+    ///
+    /// This is the check the icons needed: they were rasterized from SVG, doing
+    /// that failed silently on a machine without an SVG loader, and the only
+    /// thing that changed was that the picture was never appended — a pill with
+    /// a label and no icon looks exactly like a bar whose pills have no icons.
+    ///
+    /// Like the click check this needs a display and stands down without one.
+    #[test]
+    fn a_pill_carries_its_glyph_beside_its_label() {
+        let ran = crate::testing::on_gtk_thread(|| {
+            let (button, label, ..) = wired_pill("dev.saravenpi.ControlGlyphTest");
+            let row = button
+                .child()
+                .and_then(|child| child.downcast::<Box>().ok())
+                .expect("the pill holds a row");
+            let glyph = row
+                .first_child()
+                .and_then(|child| child.downcast::<gtk4::Image>().ok())
+                .expect("the row leads with the pill's icon");
+            let texture = glyph
+                .paintable()
+                .and_then(|paintable| paintable.downcast::<gtk4::gdk::Texture>().ok())
+                .expect("the icon has a texture to paint");
+
+            assert_eq!(
+                (texture.width(), texture.height()),
+                (24, 24),
+                "the glyph is drawn at the icon's own size"
+            );
+            let widget = label.clone().upcast_ref::<gtk4::Widget>().as_ptr();
+            assert!(
+                glyph
+                    .next_sibling()
+                    .is_some_and(|next| next.as_ptr() == widget),
+                "and the label it ticks comes after it"
+            );
+        });
+        if !ran {
+            eprintln!("statusbar: no display, skipping the pill glyph test");
         }
     }
 }
