@@ -193,11 +193,10 @@ itself the moment `palette sync` rewrites it — no restart, no compositor reloa
 required. A file that does not exist yet is watched too, so a widget started
 before its first sync picks the colors up when it appears.
 
-The statusbar's control icons are rasterized bitmaps rather than stylesheet
-rules, so they cannot follow the cascade the way the labels beside them do. The
-bar draws them again whenever the stylesheet is rebuilt, so a `palette sync`
-moves the glyphs and the text together instead of leaving the icons a release
-behind.
+The statusbar's control icons are bitmaps rather than stylesheet rules, so they
+cannot follow the cascade the way the labels beside them do. The bar draws them
+again whenever the stylesheet is rebuilt, so a `palette sync` moves the glyphs
+and the text together instead of leaving the icons a release behind.
 
 ## Running
 
@@ -236,9 +235,12 @@ stream for **sway** (i3 protocol) and **niri**, and `.socket2.sock` for
 The right-hand end carries the CPU and memory load as two pills, then a row of
 optional control pills: volume, brightness, battery, network and a logout button.
 Each control pill leads with a pixel-art glyph — the
-[pixelarticons][pixelarticons] set, drawn in the palette foreground and
-rasterized through librsvg, which GTK already links, so the bar takes on no icon
-dependency. Each control pill only appears when its backend is present, so the bar
+[pixelarticons][pixelarticons] set, compiled into the binary as 24×24 masks and
+drawn in the palette foreground, so the bar takes on no icon dependency and no
+image loader: the SVG bodies they were rasterized from need librsvg, which is an
+optional package on most distributions, so a bar built on a machine without it
+used to draw a pill's label and nothing beside it. Each control pill only appears
+when its backend is present, so the bar
 looks right on a desktop without a battery or on a machine without audio. Memory is
 `MemTotal - MemAvailable` from `/proc/meminfo`; the CPU share is the busy delta
 between two `/proc/stat` samples two seconds apart. Both are read from `/proc`

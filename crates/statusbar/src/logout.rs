@@ -49,9 +49,7 @@ pub fn pill(painted: &Rc<RefCell<icons::Painted>>) -> Option<Button> {
 
     let label = Label::new(Some("Logout"));
     let child = Box::new(Orientation::Horizontal, 4);
-    if let Some(image) = painted.borrow_mut().image(icons::Icon::Logout) {
-        child.append(&image);
-    }
+    child.append(&painted.borrow_mut().image(icons::Icon::Logout));
     child.append(&label);
 
     let button = Button::new();

@@ -89,8 +89,8 @@ impl Row {
     }
 }
 
-/// One pill: the icon (when it rasterizes) beside `label`, and a click that opens
-/// the control's own popup and then pulls the label back up to date.
+/// One pill: the icon beside `label`, and a click that opens the control's own
+/// popup and then pulls the label back up to date.
 ///
 /// The label is made by the caller and handed in, so the label the button paints
 /// is the one the tickers refresh — a pill that built its own internal label
@@ -108,9 +108,7 @@ fn pill(
     refresh(label);
 
     let child = Box::new(Orientation::Horizontal, 4);
-    if let Some(image) = painted.borrow_mut().image(icon) {
-        child.append(&image);
-    }
+    child.append(&painted.borrow_mut().image(icon));
     child.append(label);
 
     let button = gtk4::Button::new();

@@ -1,61 +1,74 @@
-//! The icon checks: every body rasterizes, the tint reaches the glyph, and a
-//! rewritten palette repaints the icons the bar is already showing.
+//! The icon checks: every icon has a mask of its own, the tint reaches the pixels
+//! the mask inks, and a rewritten palette repaints the icons the bar is already
+//! showing.
 
 use std::cell::RefCell;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use gtk4::prelude::*;
+use gtk4::{gdk_pixbuf, gio};
 
 use super::*;
 use crate::testing;
 
-/// Every icon the bar uses has to rasterize to a 24×24 bitmap with ink on it.
-/// Without this, a missing SVG loader or a body that no longer paints would show
-/// up as a blank pill and nothing else would notice — the icons are the one part
-/// of the bar no stylesheet check touches.
+/// The icons the bar draws, so a new one is added here as well as to the enum.
+const ICONS: [Icon; 5] = [
+    Icon::Battery,
+    Icon::Brightness,
+    Icon::Volume,
+    Icon::Network,
+    Icon::Logout,
+];
+
+/// Every icon has to decode to a full 24×24 frame with ink on it, and the five
+/// have to be five different pictures.
+///
+/// A mask that is a row short, empty, or copied from its neighbour paints a blank
+/// or wrong pill, and nothing else in the suite would notice: the icons are the
+/// one part of the bar no stylesheet check touches.
 #[test]
-fn every_icon_rasterizes_with_visible_pixels() {
-    let icons = [
-        Icon::Battery,
-        Icon::Brightness,
-        Icon::Volume,
-        Icon::Network,
-        Icon::Logout,
-    ];
-    for icon in icons {
-        let doc = svg_with_tint(icon.svg(), &RGBA::new(1.0, 1.0, 1.0, 1.0));
-        let pixbuf =
-            rasterize(doc.as_bytes()).unwrap_or_else(|| panic!("{icon:?} did not rasterize"));
+fn every_icon_decodes_to_a_full_frame_of_its_own() {
+    let mut seen: Vec<&str> = Vec::new();
+    for icon in ICONS {
+        let pixels = rgba(icon, &RGBA::new(1.0, 1.0, 1.0, 1.0));
         assert_eq!(
-            (pixbuf.width(), pixbuf.height()),
-            (24, 24),
-            "{icon:?} is not 24×24"
+            pixels.len(),
+            (SIDE * SIDE * 4) as usize,
+            "{icon:?} is not a 24×24 frame"
         );
-        assert!(pixbuf.has_alpha(), "{icon:?} lost its alpha channel");
-        let channels = pixbuf.n_channels() as usize;
-        let pixels = pixbuf.read_pixel_bytes();
+        let inked = pixels.chunks(4).filter(|pixel| pixel[3] == 255).count();
+        assert!(inked > 0, "{icon:?} paints nothing");
         assert!(
-            pixels.chunks(channels).any(|pixel| pixel[channels - 1] > 0),
-            "{icon:?} rasterized to an empty bitmap"
+            inked < (SIDE * SIDE) as usize,
+            "{icon:?} paints a solid block"
         );
+        assert!(
+            !seen.contains(&icon.mask()),
+            "{icon:?} repeats another icon's mask"
+        );
+        seen.push(icon.mask());
     }
 }
 
-/// The tint has to reach the glyph: if it did not, the icons would render
-/// white-on-transparent and be invisible on a light palette.
+/// The tint has to reach the pixels the mask inks: if it did not, the icons would
+/// paint in whatever the bytes happened to hold, which is nothing on a palette
+/// the bar was not built for.
 #[test]
-fn the_tint_replaces_the_bodies_colour() {
-    let doc = svg_with_tint(Icon::Battery.svg(), &RGBA::new(1.0, 0.0, 0.0, 1.0));
-    assert!(doc.contains("#ff0000"), "the tint was not substituted in");
-    assert!(!doc.contains("currentColor"), "currentColor was left behind");
-}
-
-/// A body that cannot be rasterized has to come back as `None` rather than
-/// panicking, because that is what lets the pill fall back to its label.
-#[test]
-fn unparseable_svg_is_none() {
-    assert!(rasterize(b"<svg>not svg at all").is_none());
+fn the_tint_reaches_the_inked_pixels() {
+    let pixels = rgba(Icon::Battery, &RGBA::new(1.0, 0.0, 0.0, 1.0));
+    let ink: &[u8] = &[0xff, 0x00, 0x00, 0xff];
+    let blank: &[u8] = &[0x00, 0x00, 0x00, 0x00];
+    let mut inked = 0;
+    for pixel in pixels.chunks(4) {
+        assert!(
+            pixel == ink || pixel == blank,
+            "a pixel is neither the tint nor transparent: {pixel:?}"
+        );
+        if pixel == ink {
+            inked += 1;
+        }
+    }
+    assert!(inked > 0, "the tint never landed on a pixel");
 }
 
 /// `palette sync` rewrites `palette.css`, the bar restyles itself, and the glyphs
@@ -95,14 +108,17 @@ fn retint_check(context: &glib::MainContext) {
     shell_common::theme::init(include_str!("../../style.css"), "statusbar");
     let painted = Rc::new(RefCell::new(Painted::default()));
     follow_palette(painted.clone());
-    let image = painted.borrow_mut().image(Icon::Battery).expect("the battery icon");
+    let image = painted.borrow_mut().image(Icon::Battery);
     assert_eq!(
         glyph_colour(&image),
         Some((0xff, 0x00, 0x00)),
         "the glyph takes the ink the palette names"
     );
 
-    let inks = [("#00ff00", (0x00, 0xff, 0x00)), ("#0000ff", (0x00, 0x00, 0xff))];
+    let inks = [
+        ("#00ff00", (0x00, 0xff, 0x00)),
+        ("#0000ff", (0x00, 0x00, 0xff)),
+    ];
     for (palette, expected) in inks {
         palette_at(&home, palette);
         assert!(
