@@ -6,7 +6,9 @@ use std::rc::Rc;
 
 use gtk4::glib;
 use gtk4::prelude::*;
-use gtk4::{Application, Box, Label};
+use gtk4::{Application, Box, CenterBox, Label};
+
+use shell_common::theme::MODULE_GAP;
 
 use crate::ipc;
 use crate::popup;
@@ -15,7 +17,7 @@ use crate::{control, icons, stats};
 /// Everything on the bar that has to outlive the function that builds it. The
 /// label fields are the ones a ticker reaches back into.
 pub struct Ui {
-    pub root: Box,
+    pub root: CenterBox,
     pub workspaces: Box,
     clock: Label,
     ram: Label,
@@ -26,13 +28,20 @@ pub struct Ui {
 
 /// Build the bar: the workspace strip, the clock, the CPU/RAM readings and the
 /// control row, in that order.
+///
+/// The three are the bar's modules: workspaces on the left, the clock in the
+/// middle, the CPU and memory pills and the control row on the right. A centre
+/// box rather than a row of expanding children is what actually holds the clock
+/// in the middle of the bar — three children sharing the spare width put it
+/// wherever the wider end left it, a good 100 px off centre — and one
+/// [`MODULE_GAP`] separates every pair of modules and every pair of items
+/// inside one.
 pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
-    let root = Box::new(gtk4::Orientation::Horizontal, 0);
+    let root = CenterBox::new();
     root.add_css_class("bar");
 
-    let workspaces = Box::new(gtk4::Orientation::Horizontal, 6);
+    let workspaces = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
     workspaces.add_css_class("workspaces");
-    workspaces.set_hexpand(true);
     workspaces.set_halign(gtk4::Align::Start);
     if compositor == ipc::Compositor::Unknown {
         workspaces.set_visible(false);
@@ -40,10 +49,8 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
 
     let clock = Label::new(None);
     clock.add_css_class("clock");
-    clock.set_hexpand(true);
     clock.set_halign(gtk4::Align::Center);
 
-    let (stats_row, ram, cpu) = stats_row();
     // The pills collect their glyphs in here, and the hook holds the same set:
     // the icons are drawn rather than styled, so they cannot follow the cascade
     // the way the labels do, and this is what repaints them every time the
@@ -51,11 +58,11 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     let painted = Rc::new(RefCell::new(icons::Painted::default()));
     icons::follow_palette(painted.clone());
     let controls = control::build(&popup::Popup::new(app), &painted);
+    let (right, ram, cpu) = right_row(&controls.container);
 
-    root.append(&workspaces);
-    root.append(&clock);
-    root.append(&stats_row);
-    root.append(&controls.container);
+    root.set_start_widget(Some(&workspaces));
+    root.set_center_widget(Some(&clock));
+    root.set_end_widget(Some(&right));
 
     Ui {
         root,
@@ -68,20 +75,29 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     }
 }
 
-/// The CPU and memory readings, as two pills at the right-hand end, so both ends
-/// of the bar read as one piece.
-fn stats_row() -> (Box, Label, Label) {
+/// The bar's right-hand module: the CPU and memory readings as two pills, then
+/// the control row, one gap apart — with the two labels a ticker refreshes.
+///
+/// They are one piece rather than two. Appended to the bar one after the other
+/// they had no gap between them at all, so the RAM pill sat flush against the
+/// volume pill while every other pair on the bar kept its own gap.
+fn right_row(controls: &Box) -> (Box, Label, Label) {
     let ram = Label::new(None);
     ram.add_css_class("stat");
     let cpu = Label::new(None);
     cpu.add_css_class("stat");
-    let row = Box::new(gtk4::Orientation::Horizontal, 6);
-    row.add_css_class("stats");
-    row.set_hexpand(true);
-    row.set_halign(gtk4::Align::End);
-    row.append(&ram);
-    row.append(&cpu);
-    (row, ram, cpu)
+
+    let stats = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
+    stats.add_css_class("stats");
+    stats.append(&ram);
+    stats.append(&cpu);
+
+    let right = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
+    right.add_css_class("right");
+    right.set_halign(gtk4::Align::End);
+    right.append(&stats);
+    right.append(controls);
+    (right, ram, cpu)
 }
 
 /// Put the clock, the CPU/RAM readings and the battery and network pills on their

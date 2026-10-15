@@ -18,9 +18,6 @@
   border-radius: 0;
 }
 
-.workspaces {
-}
-
 button.ws {
   background-color: alpha(@palette_fg, 0.1);
   min-width: 26px;
@@ -61,12 +58,14 @@ button.ws.urgent:hover {
    soft pill language as the RAM/CPU stat pills, so the right end of the bar
    reads as one material. The slider popup is a small floating card that appears
    under the pill when a control is pressed and held (or clicked) so the bar
-   itself stays a narrow status line. */
-.controls {
-  /* keep the three pills flush against each other, like the stats row */
-}
+   itself stays a narrow status line.
 
-.pill {
+   The stats are labels rather than buttons and had no rule of their own here, so
+   they came out as bare text beside a row of pills: none of the material, and
+   not even the same height. One rule covers both; the space between them, and
+   between them and the controls, is the bar's own module gap. */
+.pill,
+.stat {
   min-height: 20px;
   padding: 0 8px;
   background-color: alpha(@palette_fg, 0.1);

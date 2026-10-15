@@ -62,7 +62,7 @@ pub fn build(popup: &Popup, painted: &Rc<RefCell<icons::Painted>>) -> Row {
 
 impl Row {
     fn new() -> Self {
-        let container = Box::new(Orientation::Horizontal, 6);
+        let container = Box::new(Orientation::Horizontal, shell_common::theme::MODULE_GAP);
         container.add_css_class("controls");
         container.set_hexpand(false);
         container.set_halign(gtk4::Align::End);

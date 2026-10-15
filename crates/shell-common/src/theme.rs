@@ -27,6 +27,16 @@ pub const GAP: i32 = 10;
 /// and the windows it sits beside.
 pub const GAP_INNER: i32 = 10;
 
+/// The gap between two modules on a widget and between the items inside one.
+///
+/// One measure for both, from the 4/8/12/16/24 scale the shared sheet follows,
+/// so a row reads as a single rhythm: the statusbar's workspace chips, its CPU
+/// and memory pills and its control pills are all this far apart, and one module
+/// is this far from the next. It used to be 6 inside a module and 0 between two
+/// of them, which left the CPU and memory pills welded to the control row while
+/// every other pair on the bar had a gap.
+pub const MODULE_GAP: i32 = 8;
+
 /// Height of the statusbar, and the strip it reserves at the top of the
 /// screen. A widget that docks to an edge keeps its content out of that strip
 /// so it never sits underneath the bar. The bar itself is a floating pill, so
