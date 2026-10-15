@@ -251,10 +251,12 @@ rather than showing a stale number.
 - **Brightness** reads the first backlight device from `/sys/class/backlight` and
   writes it back. Click for a popup with the percent, a fill bar and `+5%`/`-5%`
   steps.
-- **Battery** reads the first battery from `/sys/class/power_supply` and ticks every
-  30 seconds. It shows percent and a one-word state (`Chg`/`Dis`/`Full`/`AC`); click
-  for a popup with the percent, a fill bar and the time-to-full / time-to-empty when
-  the kernel reports it.
+- **Battery** reads the fullest battery from `/sys/class/power_supply` and ticks
+  every 30 seconds. It shows percent and a one-word state: `Chg` while current is
+  flowing in, `Full` at the top, `AC` on external power with the battery held back
+  — a charge threshold, usually — and `Dis` on its own cells. Click for a popup
+  with the percent, a fill bar and the time-to-full / time-to-empty when the
+  kernel reports it and the battery is actually moving.
 - **Network** reads NetworkManager through `nmcli` and falls back to
   `networkctl` (systemd-networkd). It shows the connection state and, when
   connected, the Wi-Fi SSID or interface name, and ticks every 15 seconds; click for

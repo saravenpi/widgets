@@ -8,6 +8,16 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Fixed
 
+- `statusbar`: the battery pill says when the machine is plugged in. The adapter
+  read asked the *battery* directory for `AC/online` — a file that belongs to the
+  adapter and that no battery device has — so it resolved to nothing on every
+  machine, and the state machine required it before it would call a battery
+  charging. A battery on external power therefore showed `Bat 80?` while charging
+  and while held at its level. The adapter is found by scanning
+  `/sys/class/power_supply` for the supply that reports `online`, whatever the
+  machine calls it, a battery that reports `Charging` is taken at its word, and
+  the popup no longer claims a time to empty for a battery that is plugged in and
+  not draining.
 - `statusbar`: the control icons follow the palette. They are drawn as
   rasterized bitmaps rather than stylesheet rules, so `palette sync` used to
   restyle the bar around them and leave the glyphs on the old ink until the bar
