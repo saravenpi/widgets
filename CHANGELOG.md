@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-10-16
+
+### Added
+
+- `exit`: new session dialog widget for Sway and Wayland compositors. Replaces
+  `swaynag` with a hard-edged, palette-themed floating modal providing Exit,
+  Reboot, Power Off, and Cancel actions. Supports `--version`, hot-reloads from
+  `~/.config/widgets/exit.css`, and closes on Escape.
+
+### Fixed
+
+- All widgets enforce `border-radius: 0` across every element, pill, row,
+  button, entry, and popup card.
+- `statusbar`: control and network popups now drop directly under the clicked
+  pill (`position_under`) aligned to its right edge like a macOS menu extra,
+  instead of docking to the top-left of the screen.
+- `statusbar`: `.bar` uses `padding: 0 10px` so total height equals the reserved
+  52px `BAR_HEIGHT`, eliminating the vertical overflow that overlapped the
+  sidebar panel below it.
+- `launcher`: entry chrome, focus borders, and rounded outlines are stripped,
+  with a 6px margin added beneath the search input and results list.
+
 ## [0.10.1] - 2026-10-15
 
 ### Fixed
