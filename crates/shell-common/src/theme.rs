@@ -54,7 +54,8 @@ pub const MODULE_GAP: i32 = 8;
 /// sidebar has to guess around: `.bar` fills 32px of content between two `GAP`
 /// margins and no vertical padding, which sums to this. `statusbar` reserves it
 /// as its exclusive zone, so windows and the sidebar both start below it.
-pub const BAR_HEIGHT: i32 = 32 + GAP * 2;
+pub const BAR_HEIGHT: i32 = 32 + GAP;
+pub const WINDOW_TOP_GAP: i32 = BAR_HEIGHT + GAP;
 
 /// Loaded before every widget stylesheet, which may override any of it.
 ///
@@ -66,6 +67,10 @@ pub const BASE_CSS: &str = r#"
 window {
   background-color: transparent;
   font-family: "undefined";
+}
+
+window.backdrop {
+  background-color: transparent;
 }
 
 /* Muted text: timestamps, hints, secondary labels. */

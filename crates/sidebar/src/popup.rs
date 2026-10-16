@@ -62,7 +62,7 @@ impl Popups {
         layer.exclusive_zone(false);
         layer.keyboard_mode(KeyboardMode::None);
         layer.window.set_width_request(TOAST_WIDTH);
-        layer.window.set_margin(Edge::Top, theme::BAR_HEIGHT);
+        layer.window.set_margin(Edge::Top, theme::WINDOW_TOP_GAP);
         layer.window.set_margin(Edge::Right, theme::GAP);
 
         let list = gtk4::Box::new(gtk4::Orientation::Vertical, 8);

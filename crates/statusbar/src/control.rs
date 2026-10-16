@@ -119,6 +119,10 @@ fn pill(
     let label = label.clone();
     let anchor = button.clone();
     button.connect_clicked(move |_| {
+        if popup.is_open_for(&anchor) {
+            popup.hide();
+            return;
+        }
         popup.position_under(&anchor);
         show(&popup);
         refresh(&label);

@@ -47,13 +47,20 @@ pub fn show(popup: &Popup) {
     popup.show(|pop| {
         let header = Label::new(Some("Network"));
         header.add_css_class("label");
+        header.set_halign(gtk4::Align::Start);
+        header.set_xalign(0.0);
 
         let value = Label::new(Some(&summary));
         value.add_css_class("value");
+        value.set_halign(gtk4::Align::Start);
+        value.set_xalign(0.0);
 
         let row = Box::new(Orientation::Vertical, 6);
+        row.set_halign(gtk4::Align::Start);
         let info = Label::new(Some(&detail));
         info.add_css_class("dim");
+        info.set_halign(gtk4::Align::Start);
+        info.set_xalign(0.0);
         row.append(&info);
 
         pop.append(&header);

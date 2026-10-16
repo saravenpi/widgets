@@ -4,7 +4,7 @@ use std::process::Command;
 
 use gtk4::prelude::*;
 use gtk4::{gdk, Application, Box, Button, Label, Orientation};
-use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
+use gtk4_layer_shell::{KeyboardMode, Layer};
 use shell_common::app::run as run_app;
 use shell_common::layer::{ensure_supported, LayerWindow};
 use shell_common::theme;
@@ -110,42 +110,40 @@ fn activate(application: &Application) {
     actions.append(&power_btn);
     surface.append(&actions);
 
-    window.set_child(Some(&surface));
+    let center = Box::new(Orientation::Vertical, 0);
+    center.set_valign(gtk4::Align::Center);
+    center.set_halign(gtk4::Align::Center);
+    center.append(&surface);
+
+    let click = gtk4::GestureClick::new();
+    let close_win = window.clone();
+    let dialog_box = surface.clone();
+    click.connect_pressed(move |_, _, x, y| {
+        let (surface_x, surface_y) = match dialog_box.translate_coordinates(&close_win, 0.0, 0.0) {
+            Some(coords) => coords,
+            None => return,
+        };
+        let width = f64::from(dialog_box.allocated_width());
+        let height = f64::from(dialog_box.allocated_height());
+        let inside = x >= surface_x && x <= surface_x + width && y >= surface_y && y <= surface_y + height;
+        if !inside {
+            close_win.close();
+        }
+    });
+    window.add_controller(click);
+
+    window.set_child(Some(&center));
     window.present();
     cancel_btn.grab_focus();
 }
 
 fn layer_window(application: &Application) -> LayerWindow {
     let layer = LayerWindow::new(application).layer(Layer::Overlay);
-    layer.anchors(true, true, true, false);
+    layer.anchors(true, true, true, true);
     layer.exclusive_zone(false);
     layer.keyboard_mode(KeyboardMode::Exclusive);
-    let (top, side) = margins();
-    layer.window.set_margin(Edge::Top, top);
-    layer.window.set_margin(Edge::Left, side);
-    layer.window.set_margin(Edge::Right, side);
+    layer.window.set_css_classes(&["exit-overlay"]);
     layer
-}
-
-fn margins() -> (i32, i32) {
-    let display = match gdk::Display::default() {
-        Some(display) => display,
-        None => return (0, 0),
-    };
-    let monitors = display.monitors();
-    let monitor = monitors
-        .item(0)
-        .and_then(|object| object.downcast::<gdk::Monitor>().ok());
-    let (width, height) = match monitor {
-        Some(monitor) => {
-            let geometry = monitor.geometry();
-            (geometry.width(), geometry.height())
-        }
-        None => (1920, 1080),
-    };
-    let top = ((height - 160) / 2).max(0);
-    let side = ((width - WIDTH) / 2).max(0);
-    (top, side)
 }
 
 #[cfg(test)]

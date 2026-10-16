@@ -107,7 +107,7 @@ fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32, sh
     layer.keyboard_mode(KeyboardMode::OnDemand);
     layer.window.set_width_request(360);
     let window = &layer.window;
-    window.set_margin(Edge::Top, shell_common::theme::BAR_HEIGHT);
+    window.set_margin(Edge::Top, shell_common::theme::WINDOW_TOP_GAP);
     window.set_margin(Edge::Right, shell_common::theme::GAP);
     window.set_margin(Edge::Bottom, shell_common::theme::GAP);
 
