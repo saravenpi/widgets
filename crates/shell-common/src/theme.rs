@@ -22,6 +22,14 @@ use crate::palette;
 /// matching `gaps outer` in the compositor config. The bar is inset by it on
 /// every side, and the sidebar and its toasts keep it off the right and bottom
 /// edges so they float the same way.
+///
+/// This is the *same unit* sway uses for `gaps`. A sway gap and a layer-shell
+/// margin are both logical (device-independent) pixels — sway multiplies its
+/// config values by the output scale to place things physically, and GTK does
+/// the same with `set_margin` (surface-local coordinates) and CSS `px`. So
+/// `gaps outer 10` and `GAP = 10` are the same 10 pixels on screen at any
+/// scale, and the numbers can be kept literally equal. Read the value from
+/// `gaps outer` in the compositor config; it is what the windows respect too.
 pub const GAP: i32 = 10;
 /// `gaps inner` in the compositor config, the same measure used between the bar
 /// and the windows it sits beside.
@@ -41,6 +49,11 @@ pub const MODULE_GAP: i32 = 8;
 /// screen. A widget that docks to an edge keeps its content out of that strip
 /// so it never sits underneath the bar. The bar itself is a floating pill, so
 /// this is the pill (32px) plus a `GAP` above and below it.
+///
+/// The bar's window is exactly this tall, so this is not an estimate the
+/// sidebar has to guess around: `.bar` fills 32px of content between two `GAP`
+/// margins and no vertical padding, which sums to this. `statusbar` reserves it
+/// as its exclusive zone, so windows and the sidebar both start below it.
 pub const BAR_HEIGHT: i32 = 32 + GAP * 2;
 
 /// Loaded before every widget stylesheet, which may override any of it.
@@ -101,6 +114,16 @@ button:focus-visible {
 button:disabled {
   background-color: transparent;
   color: alpha(@palette_fg, 0.35);
+}
+
+/* Nothing in the shell is rounded, ever. The toolkit's own theme rounds
+   buttons, fields, rows, sliders and their focus rings by default, so a corner
+   would creep back in through whichever widget nobody remembered to square
+   off. A universal rule is the point: every single node — the bar, the pills,
+   the network popup, the launcher field, the exit dialog — is hard-edged, and
+   one place says so. */
+* {
+  border-radius: 0;
 }
 "#;
 

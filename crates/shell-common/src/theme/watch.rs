@@ -42,18 +42,17 @@ fn watch_palette(
     Some(monitor)
 }
 
-/// Watch the user's own sheet at `$HOME/.config/widgets/<name>.css`, when they
-/// have placed one. A missing file is not an error: the widget keeps its shipped
-/// look, and nothing is watched until the file appears.
+/// Watch the user's own sheet at `$HOME/.config/widgets/<name>.css`. A file
+/// that does not exist yet is watched too, exactly like the palette: the
+/// monitor reports its creation, so a widget started before the user wrote
+/// their sheet picks it up the moment it lands — a sheet placed after start-up
+/// used to be ignored until the widget was restarted.
 fn watch_user_sheet(
     provider: &gtk4::CssProvider,
     name: &str,
     default: &'static str,
 ) -> Option<gio::FileMonitor> {
     let path = palette::sheet_file(name)?;
-    if std::fs::metadata(&path).is_err() {
-        return None;
-    }
     let monitor = monitor_file(path)?;
     reload_on_change(&monitor, provider, name, default);
     Some(monitor)

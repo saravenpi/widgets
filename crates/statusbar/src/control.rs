@@ -117,7 +117,9 @@ fn pill(
 
     let popup = popup.clone();
     let label = label.clone();
+    let anchor = button.clone();
     button.connect_clicked(move |_| {
+        popup.position_under(&anchor);
         show(&popup);
         refresh(&label);
     });

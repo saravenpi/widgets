@@ -1,0 +1,10 @@
+[package]
+name = "exit"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+gtk4.workspace = true
+gtk4-layer-shell.workspace = true
+shell-common.workspace = true

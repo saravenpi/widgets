@@ -19,11 +19,16 @@ pub struct Popup {
 }
 
 impl Popup {
+    /// Build the shared popup. It is anchored to the top-right and drops down
+    /// below the bar; [`position_under`] then slides it along so its right edge
+    /// lines up with whichever pill opened it. That is the macOS menu-bar
+    /// behaviour — the card hangs under the button you pressed — rather than a
+    /// card parked in the top-left corner of the screen, which is where it used
+    /// to land no matter which control was clicked.
     pub fn new(application: &Application) -> Self {
         let layer = LayerWindow::new(application).layer(Layer::Top);
-        layer.anchors(true, true, false, false);
+        layer.anchors(true, false, true, false);
         layer.window.set_margin(Edge::Top, shell_common::theme::BAR_HEIGHT);
-        layer.window.set_margin(Edge::Left, shell_common::theme::GAP);
         layer.window.set_margin(Edge::Right, shell_common::theme::GAP);
 
         let window = layer.window;
@@ -34,6 +39,31 @@ impl Popup {
         let pop = Popup { window, root };
         pop.hide();
         pop
+    }
+
+    /// Slide the card so it hangs under `anchor` (the pill that was clicked),
+    /// its right edge aligned to the pill's right edge.
+    ///
+    /// Layer-shell places a window by margins from the screen edges, so the
+    /// pill's right edge is measured in the bar's own coordinates (the bar is
+    /// anchored to the left edge and spans the full width, so those are screen
+    /// coordinates) and turned into a right margin. The bar is a child of the
+    /// pill's toplevel, which is exactly what `translate_coordinates` needs.
+    ///
+    /// A pill that is not yet realised has no toplevel to measure against; the
+    /// call is then a no-op and the card keeps its default top-right spot,
+    /// which is still on screen.
+    pub fn position_under(&self, anchor: &impl IsA<gtk4::Widget>) {
+        let Some(toplevel) = anchor.root() else {
+            return;
+        };
+        let Some((x, _)) = anchor.translate_coordinates(&toplevel, 0.0, 0.0) else {
+            return;
+        };
+        let right_edge = x + f64::from(anchor.allocated_width());
+        let screen_width = f64::from(toplevel.allocated_width());
+        let margin_right = (screen_width - right_edge).max(f64::from(shell_common::theme::GAP)) as i32;
+        self.window.set_margin(Edge::Right, margin_right);
     }
 
     pub fn show<F: Fn(&Box)>(&self, build: F) {
