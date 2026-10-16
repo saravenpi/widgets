@@ -6,6 +6,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.11.1] - 2026-10-16
+
+### Added
+
+- `exit`: modal now dims the entire screen around the centered dialog card via
+  a translucent overlay backdrop (`window.exit-overlay`), dismissing when clicking
+  outside.
+
+### Fixed
+
+- `statusbar`: control and network popups dismiss immediately when clicking
+  outside on a transparent backdrop or pressing Escape. Clicking the active pill
+  toggles the popup closed.
+- `statusbar`: network popup text is strictly left-aligned rather than centered.
+- `statusbar`: eliminated double gap beneath the statusbar. `.bar` uses
+  `margin: 10px 10px 0 10px;` and window height is 42 px (`32 + GAP`), ensuring
+  Sway's gap and sidebar/toast placements start at 52 px (`WINDOW_TOP_GAP`),
+  leaving an exact 10 px gap below the bar everywhere.
+
 ## [0.11.0] - 2026-10-16
 
 ### Added
