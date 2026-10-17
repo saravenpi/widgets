@@ -114,6 +114,7 @@ fn pill(
     let button = gtk4::Button::new();
     button.set_child(Some(&child));
     button.add_css_class("pill");
+    button.set_valign(gtk4::Align::Center);
 
     let popup = popup.clone();
     let label = label.clone();

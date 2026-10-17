@@ -6,6 +6,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-10-17
+
+### Added
+
+- `cheatsheet`: new universal keybindings manager and interactive cheatsheet widget.
+  - Reads unified YAML keybinding schema (`~/.config/widgets/keybinds.yml`).
+  - CLI sync (`cheatsheet sync`) compiles keybindings to Sway (`~/.config/sway/keybinds.conf`),
+    Hyprland (`~/.config/hypr/keybinds.conf`), and Niri (`~/.config/niri/keybinds.kdl`).
+  - Interactive GTK4 overlay cheatsheet modal featuring real-time fuzzy search filtering,
+    categorized key pills, and a one-click Sync action.
+- `shell-common`: added `general.opacity` setting (default `1.0`), making widgets solid
+  by default while preserving configurable transparency.
+
+### Fixed
+
+- `settings`: removed modal background dimming overlay, removed all borders around cards
+  and dialog containers, and left-aligned sidebar category navigation buttons.
+- `statusbar`: balanced inner padding and outer margins across workspace indicators,
+  system statistics, and control pills with vertical centering.
+- `theme`: unified GTK4 dropdown and popover selection menus with zero border-radius,
+  no Adwaita chrome, and palette color integration.
+
 ## [0.12.0] - 2026-10-17
 
 ### Added

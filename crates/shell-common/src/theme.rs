@@ -63,74 +63,7 @@ pub const WINDOW_TOP_GAP: i32 = BAR_HEIGHT + GAP;
 /// system: spacing in 4/8/12/16/24, a single hairline in a low-contrast tone,
 /// one accent, and no shadows or gradients. Hierarchy comes from type size and
 /// weight plus empty space, not from borders and fills.
-pub const BASE_CSS: &str = r#"
-window {
-  background-color: transparent;
-  font-family: "undefined";
-}
-
-window.backdrop {
-  background-color: transparent;
-}
-
-/* Muted text: timestamps, hints, secondary labels. */
-.dim {
-  color: alpha(@palette_fg, 0.55);
-  font-size: 11px;
-}
-
-/* Any raised area over the desktop: the sidebar panel, the launcher. A flat
-   floating card — no border and no rounded corners, so the three widgets read as
-   one hard-edged system rather than a family of pills. */
-.surface {
-  background-color: alpha(@palette_bg, 0.96);
-  color: @palette_fg;
-  border-radius: 0;
-}
-
-/* Ghost button, shared by the statusbar chips and the sidebar actions: a
-   low-contrast fill that only deepens on hover. No border — a hairline here
-   would fight the modules for pixels when they sit next to the bar. */
-button {
-  border: none;
-  background-color: alpha(@palette_fg, 0.08);
-  background-image: none;
-  box-shadow: none;
-  color: @palette_fg;
-  font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  min-height: 20px;
-  min-width: 20px;
-  /* The default theme rings a focused widget with a 2px accent-coloured
-     outline. Nothing here wants that chrome; focus is shown in the palette. */
-  outline: 0 solid transparent;
-}
-
-button:hover {
-  background-color: alpha(@palette_fg, 0.16);
-}
-
-button:focus-visible {
-  background-color: alpha(@palette_color4, 0.22);
-  color: @palette_color4;
-}
-
-button:disabled {
-  background-color: transparent;
-  color: alpha(@palette_fg, 0.35);
-}
-
-/* Nothing in the shell is rounded, ever. The toolkit's own theme rounds
-   buttons, fields, rows, sliders and their focus rings by default, so a corner
-   would creep back in through whichever widget nobody remembered to square
-   off. A universal rule is the point: every single node — the bar, the pills,
-   the network popup, the launcher field, the exit dialog — is hard-edged, and
-   one place says so. */
-* {
-  border-radius: 0;
-}
-"#;
+pub const BASE_CSS: &str = include_str!("theme/base.css");
 
 thread_local! {
     /// The callbacks to run after the stylesheet is rebuilt, in the order they
@@ -180,7 +113,20 @@ pub(crate) fn rebuild(name: &str, default: &str) -> String {
 
 /// The full stylesheet: the palette first, then the base, then the widget's.
 fn document(widget_css: &str) -> String {
-    format!("{}\n{}\n{}", palette::palette_css(), BASE_CSS, widget_css)
+    let opacity = crate::config::get().general.opacity;
+    if (0.0..1.0).contains(&opacity) {
+        let targets = ".surface, .bar, .settings-dialog, .exit-dialog, \
+                       .popup, .panel, .toast, .cheatsheet-dialog";
+        format!(
+            "{}\n{}\n{}\n{targets} {{ background-color: alpha(@palette_bg, {:.2}); }}",
+            palette::palette_css(),
+            BASE_CSS,
+            widget_css,
+            opacity
+        )
+    } else {
+        format!("{}\n{}\n{}", palette::palette_css(), BASE_CSS, widget_css)
+    }
 }
 
 /// The sheet the user placed at `$HOME/.config/widgets/<name>.css`. When present

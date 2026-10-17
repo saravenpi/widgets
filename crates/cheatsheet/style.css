@@ -1,0 +1,129 @@
+window.cheatsheet-overlay {
+  background-color: transparent;
+}
+
+.cheatsheet-dialog {
+  min-width: 720px;
+  min-height: 520px;
+  max-height: 640px;
+  background-color: @palette_bg;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.dialog-header {
+  padding: 16px 20px;
+  border: none;
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: @palette_fg;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: alpha(@palette_fg, 0.6);
+  margin-top: 2px;
+}
+
+.search-box {
+  padding: 0 20px 12px 20px;
+}
+
+.search-entry,
+.search-entry text {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 13px;
+  color: @palette_fg;
+  background-color: alpha(@palette_fg, 0.06);
+  background-image: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: 0 solid transparent;
+}
+
+.search-entry:focus,
+.search-entry:focus-within {
+  background-color: alpha(@palette_fg, 0.09);
+  box-shadow: none;
+  outline: 0 solid transparent;
+}
+
+.content-scroll {
+  padding: 0 20px 16px 20px;
+}
+
+.category-group {
+  margin-bottom: 18px;
+}
+
+.category-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: @palette_color4;
+  margin-bottom: 8px;
+}
+
+.shortcut-row {
+  min-height: 30px;
+  padding: 4px 6px;
+  border-radius: 0;
+}
+
+.shortcut-row:hover {
+  background-color: alpha(@palette_fg, 0.05);
+}
+
+.key-pill {
+  min-height: 22px;
+  padding: 2px 8px;
+  background-color: alpha(@palette_fg, 0.1);
+  color: @palette_fg;
+  font-size: 11px;
+  font-weight: 600;
+  border: none;
+  border-radius: 0;
+}
+
+.shortcut-desc {
+  font-size: 12px;
+  color: alpha(@palette_fg, 0.85);
+}
+
+button.action {
+  min-height: 32px;
+  min-width: 90px;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: @palette_fg;
+  background-color: alpha(@palette_fg, 0.08);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: 0 solid transparent;
+}
+
+button.action:hover {
+  background-color: alpha(@palette_fg, 0.18);
+  color: @palette_fg;
+}
+
+button.action.cancel {
+  background-color: alpha(@palette_fg, 0.08);
+  border: none;
+  color: alpha(@palette_fg, 0.7);
+}
+
+button.action.cancel:hover {
+  background-color: alpha(@palette_fg, 0.14);
+  color: @palette_fg;
+}

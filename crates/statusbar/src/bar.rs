@@ -43,6 +43,7 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     let workspaces = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
     workspaces.add_css_class("workspaces");
     workspaces.set_halign(gtk4::Align::Start);
+    workspaces.set_valign(gtk4::Align::Center);
     if compositor == ipc::Compositor::Unknown {
         workspaces.set_visible(false);
     }
@@ -50,6 +51,7 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     let clock = Label::new(None);
     clock.add_css_class("clock");
     clock.set_halign(gtk4::Align::Center);
+    clock.set_valign(gtk4::Align::Center);
 
     // The pills collect their glyphs in here, and the hook holds the same set:
     // the icons are drawn rather than styled, so they cannot follow the cascade
@@ -58,7 +60,9 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     let painted = Rc::new(RefCell::new(icons::Painted::default()));
     icons::follow_palette(painted.clone());
     let controls = control::build(&popup::Popup::new(app), &painted);
+    controls.container.set_valign(gtk4::Align::Center);
     let (right, ram, cpu) = right_row(&controls.container);
+    right.set_valign(gtk4::Align::Center);
 
     root.set_start_widget(Some(&workspaces));
     root.set_center_widget(Some(&clock));
@@ -89,12 +93,14 @@ fn right_row(controls: &Box) -> (Box, Label, Label) {
 
     let stats = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
     stats.add_css_class("stats");
+    stats.set_valign(gtk4::Align::Center);
     stats.append(&ram);
     stats.append(&cpu);
 
     let right = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
     right.add_css_class("right");
     right.set_halign(gtk4::Align::End);
+    right.set_valign(gtk4::Align::Center);
     right.append(&stats);
     right.append(controls);
     (right, ram, cpu)

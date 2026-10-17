@@ -19,6 +19,7 @@ pub struct GeneralConfig {
     pub font: String,
     pub gap: i32,
     pub inner_gap: i32,
+    pub opacity: f64,
 }
 
 impl Default for GeneralConfig {
@@ -27,6 +28,7 @@ impl Default for GeneralConfig {
             font: "undefined 11".to_string(),
             gap: 10,
             inner_gap: 10,
+            opacity: 1.0,
         }
     }
 }

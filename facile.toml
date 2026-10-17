@@ -3,10 +3,10 @@
 # primary, the one facile verifies and shows in list output.
 
 name = "widgets"
-summary = "Wayland desktop widgets: statusbar, sidebar, launcher, exit and settings"
+summary = "Wayland desktop widgets: statusbar, sidebar, launcher, exit, settings and cheatsheet"
 repo = "saravenpi/widgets"
 branch = "main"
 build = "rust"
 srcSubdir = "."
 bin = "statusbar"
-bins = ["statusbar", "sidebar", "launcher", "exit", "settings"]
+bins = ["statusbar", "sidebar", "launcher", "exit", "settings", "cheatsheet"]

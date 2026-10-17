@@ -5,7 +5,7 @@ window.exit-overlay {
 .exit-dialog {
   min-width: 440px;
   padding: 24px 28px;
-  background-color: alpha(@palette_bg, 0.98);
+  background-color: @palette_bg;
   border: 1px solid alpha(@palette_fg, 0.14);
   border-radius: 0;
   box-shadow: none;

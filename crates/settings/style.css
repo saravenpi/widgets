@@ -1,19 +1,19 @@
 window.settings-overlay {
-  background-color: alpha(@palette_bg, 0.65);
+  background-color: transparent;
 }
 
 .settings-dialog {
   min-width: 660px;
   min-height: 450px;
-  background-color: alpha(@palette_bg, 0.98);
-  border: 1px solid alpha(@palette_fg, 0.14);
+  background-color: @palette_bg;
+  border: none;
   border-radius: 0;
   box-shadow: none;
 }
 
 .dialog-header {
   padding: 16px 20px;
-  border-bottom: 1px solid alpha(@palette_fg, 0.08);
+  border: none;
 }
 
 .title {
@@ -31,13 +31,13 @@ window.settings-overlay {
 
 .sidebar-nav {
   min-width: 150px;
-  border-right: 1px solid alpha(@palette_fg, 0.08);
+  border: none;
   padding: 12px 8px;
 }
 
 button.nav-tab {
   min-height: 32px;
-  padding: 4px 12px;
+  padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;
   text-align: left;
@@ -46,6 +46,10 @@ button.nav-tab {
   border: none;
   border-radius: 0;
   margin-bottom: 4px;
+}
+
+button.nav-tab label {
+  text-align: left;
 }
 
 button.nav-tab:hover {
@@ -72,7 +76,7 @@ button.nav-tab.active {
 .card {
   padding: 14px 16px;
   background-color: alpha(@palette_fg, 0.04);
-  border: 1px solid alpha(@palette_fg, 0.08);
+  border: none;
   border-radius: 0;
   margin-bottom: 16px;
 }
@@ -95,6 +99,7 @@ button.nav-tab.active {
   padding: 2px 8px;
   background-color: alpha(@palette_fg, 0.1);
   color: @palette_fg;
+  border: none;
 }
 
 .badge.active {
@@ -112,11 +117,19 @@ button.action {
   background-color: alpha(@palette_fg, 0.08);
   border: none;
   border-radius: 0;
+  box-shadow: none;
+  outline: 0 solid transparent;
 }
 
 button.action:hover {
   background-color: alpha(@palette_fg, 0.18);
   color: @palette_fg;
+}
+
+button.action:focus,
+button.action:focus-visible {
+  outline: 0 solid transparent;
+  box-shadow: none;
 }
 
 button.action.primary {
@@ -130,13 +143,13 @@ button.action.primary:hover {
 }
 
 button.action.cancel {
-  background-color: transparent;
-  border: 1px solid alpha(@palette_fg, 0.14);
+  background-color: alpha(@palette_fg, 0.08);
+  border: none;
   color: alpha(@palette_fg, 0.7);
 }
 
 button.action.cancel:hover {
-  background-color: alpha(@palette_fg, 0.1);
+  background-color: alpha(@palette_fg, 0.14);
   color: @palette_fg;
 }
 
@@ -146,7 +159,8 @@ button.scale-pill {
   font-size: 11px;
   font-weight: 600;
   background-color: alpha(@palette_fg, 0.06);
-  border: 1px solid alpha(@palette_fg, 0.1);
+  border: none;
+  color: @palette_fg;
 }
 
 button.scale-pill:hover {
@@ -154,7 +168,16 @@ button.scale-pill:hover {
 }
 
 button.scale-pill.active {
-  background-color: alpha(@palette_color4, 0.2);
-  border-color: @palette_color4;
+  background-color: alpha(@palette_color4, 0.22);
+  border: none;
   color: @palette_color4;
+}
+
+dropdown,
+dropdown > button {
+  background-color: alpha(@palette_fg, 0.06);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  color: @palette_fg;
 }

@@ -70,12 +70,9 @@
   color: alpha(@palette_fg, 0.78);
 }
 
-/* Top-right toasts: the transient half of the daemon. A notification that
-   arrives while the panel is closed still has to be visible somewhere, so it
-   lands here as a card under the statusbar and expires on its own. A hairline
-   separates one toast from the next. */  .toast {
+.toast {
   padding: 10px 12px;
-  background-color: alpha(@palette_bg, 0.96);
+  background-color: @palette_bg;
   color: @palette_fg;
   border-bottom: 1px solid alpha(@palette_fg, 0.14);
   border-radius: 0;

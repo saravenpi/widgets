@@ -1,0 +1,141 @@
+window {
+  background-color: transparent;
+  font-family: "undefined";
+}
+
+window.backdrop {
+  background-color: transparent;
+}
+
+/* Muted text: timestamps, hints, secondary labels. */
+.dim {
+  color: alpha(@palette_fg, 0.55);
+  font-size: 11px;
+}
+
+/* Any raised area over the desktop: the sidebar panel, the launcher. A flat
+   floating card — no border and no rounded corners, so the three widgets read as
+   one hard-edged system rather than a family of pills. */
+.surface {
+  background-color: @palette_bg;
+  color: @palette_fg;
+  border-radius: 0;
+}
+
+/* Ghost button, shared by the statusbar chips and the sidebar actions: a
+   low-contrast fill that only deepens on hover. No border — a hairline here
+   would fight the modules for pixels when they sit next to the bar. */
+button {
+  border: none;
+  background-color: alpha(@palette_fg, 0.08);
+  background-image: none;
+  box-shadow: none;
+  color: @palette_fg;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 2px 8px;
+  min-height: 20px;
+  min-width: 20px;
+  /* The default theme rings a focused widget with a 2px accent-coloured
+     outline. Nothing here wants that chrome; focus is shown in the palette. */
+  outline: 0 solid transparent;
+}
+
+button:hover {
+  background-color: alpha(@palette_fg, 0.16);
+}
+
+button:focus-visible {
+  background-color: alpha(@palette_color4, 0.22);
+  color: @palette_color4;
+}
+
+button:disabled {
+  background-color: transparent;
+  color: alpha(@palette_fg, 0.35);
+}
+
+/* Dropdown select menus and popovers: flat, squared-off, palette-themed */
+dropdown,
+dropdown > button {
+  background-color: alpha(@palette_fg, 0.08);
+  background-image: none;
+  color: @palette_fg;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  outline: 0 solid transparent;
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 10px;
+}
+
+dropdown > button:hover {
+  background-color: alpha(@palette_fg, 0.16);
+  color: @palette_fg;
+}
+
+dropdown > button:focus,
+dropdown > button:focus-visible {
+  outline: 0 solid transparent;
+  box-shadow: none;
+}
+
+popover,
+popover > contents,
+popover.menu > contents {
+  background-color: @palette_bg;
+  background-image: none;
+  color: @palette_fg;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 4px;
+}
+
+popover > arrow {
+  background-color: @palette_bg;
+  border: none;
+}
+
+popover listview,
+popover list {
+  background-color: transparent;
+  background-image: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+popover listview > row,
+popover list > row {
+  padding: 6px 12px;
+  background-color: transparent;
+  background-image: none;
+  color: @palette_fg;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 0;
+  border: none;
+}
+
+popover listview > row:hover,
+popover list > row:hover {
+  background-color: alpha(@palette_fg, 0.08);
+  color: @palette_fg;
+}
+
+popover listview > row:selected,
+popover list > row:selected {
+  background-color: @palette_color4;
+  color: @palette_bg;
+}
+
+/* Nothing in the shell is rounded, ever. The toolkit's own theme rounds
+   buttons, fields, rows, sliders and their focus rings by default, so a corner
+   would creep back in through whichever widget nobody remembered to square
+   off. A universal rule is the point: every single node — the bar, the pills,
+   the network popup, the launcher field, the exit dialog — is hard-edged, and
+   one place says so. */
+* {
+  border-radius: 0;
+}

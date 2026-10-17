@@ -56,6 +56,7 @@ pub fn pill(painted: &Rc<RefCell<icons::Painted>>) -> Option<Button> {
     button.set_child(Some(&child));
     button.add_css_class("pill");
     button.add_css_class("logout");
+    button.set_valign(gtk4::Align::Center);
     button.connect_clicked(move |_| {
         let _ = Command::new("loginctl")
             .arg("terminate-session")

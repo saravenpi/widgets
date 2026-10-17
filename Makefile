@@ -1,4 +1,4 @@
-BINS := statusbar sidebar launcher exit settings
+BINS := statusbar sidebar launcher exit settings cheatsheet
 PREFIX ?= $(HOME)/.local/bin
 
 .PHONY: build install check clean

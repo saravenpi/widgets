@@ -49,6 +49,17 @@ fn build_header(window: &ApplicationWindow) -> Box {
     header
 }
 
+fn nav_button(text: &str) -> Button {
+    let btn = Button::new();
+    btn.add_css_class("nav-tab");
+    btn.set_hexpand(true);
+    btn.set_halign(gtk4::Align::Fill);
+    let label = Label::new(Some(text));
+    label.set_halign(gtk4::Align::Start);
+    btn.set_child(Some(&label));
+    btn
+}
+
 fn build_body() -> Box {
     let body = Box::new(Orientation::Horizontal, 0);
     body.set_vexpand(true);
@@ -60,15 +71,11 @@ fn build_body() -> Box {
     stack.set_hexpand(true);
     stack.set_vexpand(true);
 
-    let tab_displays = Button::with_label("Displays");
-    tab_displays.add_css_class("nav-tab");
+    let tab_displays = nav_button("Displays");
     tab_displays.add_css_class("active");
 
-    let tab_appearance = Button::with_label("Appearance");
-    tab_appearance.add_css_class("nav-tab");
-
-    let tab_about = Button::with_label("About");
-    tab_about.add_css_class("nav-tab");
+    let tab_appearance = nav_button("Appearance");
+    let tab_about = nav_button("About");
 
     wire_tabs(&stack, &tab_displays, &tab_appearance, &tab_about);
 
