@@ -6,6 +6,23 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-10-17
+
+### Added
+
+- `settings`: new desktop settings and display manager widget. Directly queries
+  and updates Sway display outputs (`GET_OUTPUTS` / `RUN_COMMAND`), allowing
+  immediate switching of screen resolutions (e.g. 1080p, 1200p, 1440p, 4K) and
+  scaling factors (1.0x, 1.25x, 1.5x, 2.0x) on the fly. Includes tabs for Displays,
+  Appearance (`palette sync`), and System Info.
+- `shell-common`: unified YAML configuration loader (`~/.config/widgets/config.yml`)
+  with strong typing via `serde_yaml` and comprehensive compile-time defaults.
+- `statusbar`: configurable clock format (`chrono`), height, and stats visibility.
+- `sidebar`: configurable panel width and toast notification auto-dismiss timeout.
+- `launcher`: configurable width, vertical position ratio, and search placeholder.
+- `exit`: configurable title, subtitle, and session commands with OpenRC / Alpine Linux
+  native fallbacks for reboot and poweroff.
+
 ## [0.11.1] - 2026-10-16
 
 ### Added

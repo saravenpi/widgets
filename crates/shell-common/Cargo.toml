@@ -7,3 +7,5 @@ license.workspace = true
 [dependencies]
 gtk4.workspace = true
 gtk4-layer-shell.workspace = true
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"

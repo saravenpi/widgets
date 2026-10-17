@@ -101,14 +101,20 @@ fn activate(app: &Application, items: Vec<model::Notification>, next_id: u32, sh
     }
     shell_common::theme::init(include_str!("../style.css"), "sidebar");
 
+    let cfg = shell_common::config::get();
     let layer = LayerWindow::new(app).layer(Layer::Overlay);
-    layer.anchors(true, false, true, true);
+    let on_right = cfg.sidebar.position != "left";
+    layer.anchors(true, !on_right, on_right, true);
     layer.exclusive_zone(false);
     layer.keyboard_mode(KeyboardMode::OnDemand);
-    layer.window.set_width_request(360);
+    layer.window.set_width_request(cfg.sidebar.width);
     let window = &layer.window;
     window.set_margin(Edge::Top, shell_common::theme::WINDOW_TOP_GAP);
-    window.set_margin(Edge::Right, shell_common::theme::GAP);
+    if on_right {
+        window.set_margin(Edge::Right, shell_common::theme::GAP);
+    } else {
+        window.set_margin(Edge::Left, shell_common::theme::GAP);
+    }
     window.set_margin(Edge::Bottom, shell_common::theme::GAP);
 
     let handle = dbus::start(next_id);

@@ -178,14 +178,24 @@ fn chip(workspace: &ipc::Workspace, compositor: ipc::Compositor) -> gtk4::Button
 }
 
 fn update_clock(label: &Label) {
-    label.set_text(&chrono::Local::now().format("%H:%M").to_string());
+    let fmt = &shell_common::config::get().statusbar.clock.format;
+    label.set_text(&chrono::Local::now().format(fmt).to_string());
 }
 
 fn update_stats(ram: &Label, cpu: &Label, sampler: &mut stats::Sampler) {
-    if let Some(percent) = stats::memory_percent() {
-        ram.set_text(&format!("RAM {percent}%"));
+    let cfg = &shell_common::config::get().statusbar.stats;
+    if cfg.ram {
+        if let Some(percent) = stats::memory_percent() {
+            ram.set_text(&format!("RAM {percent}%"));
+        }
+    } else {
+        ram.set_visible(false);
     }
-    if let Some(percent) = sampler.cpu_percent() {
-        cpu.set_text(&format!("CPU {percent}%"));
+    if cfg.cpu {
+        if let Some(percent) = sampler.cpu_percent() {
+            cpu.set_text(&format!("CPU {percent}%"));
+        }
+    } else {
+        cpu.set_visible(false);
     }
 }

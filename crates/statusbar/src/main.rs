@@ -57,10 +57,13 @@ fn activate(app: &Application) {
     }
     shell_common::theme::init(include_str!("../style.css"), "statusbar");
 
+    let cfg = shell_common::config::get();
     let layer = LayerWindow::new(app);
-    layer.anchors(true, true, true, false);
+    let on_top = cfg.statusbar.position != "bottom";
+    layer.anchors(on_top, true, true, !on_top);
     layer.exclusive_zone(true);
-    layer.window.set_height_request(shell_common::theme::BAR_HEIGHT);
+    let height = cfg.statusbar.height + shell_common::theme::GAP;
+    layer.window.set_height_request(height);
 
     let compositor = ipc::detect();
     let ui = bar::build(app, compositor);

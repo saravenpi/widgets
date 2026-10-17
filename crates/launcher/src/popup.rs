@@ -19,6 +19,8 @@ mod tests;
 /// The query field, and the list of results that goes under it.
 pub(super) fn build() -> (Entry, ListBox) {
     let entry = Entry::new();
+    let placeholder = &shell_common::config::get().launcher.placeholder;
+    entry.set_placeholder_text(Some(placeholder));
     let list = ListBox::new();
     list.set_selection_mode(SelectionMode::Single);
     list.set_activate_on_single_click(true);

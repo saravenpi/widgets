@@ -22,9 +22,6 @@ use crate::model::{self, Notification};
 #[cfg(test)]
 pub(crate) mod tests;
 
-/// Seconds a toast stays on screen before it expires on its own.
-const TOAST_SECONDS: i64 = 6;
-
 /// The most toasts shown at once; older ones fall off the stack.
 const MAX_TOASTS: usize = 4;
 
@@ -194,6 +191,6 @@ fn lifetime(notification: &Notification) -> i64 {
     if notification.urgent {
         i64::MAX / 2
     } else {
-        TOAST_SECONDS
+        (shell_common::config::get().sidebar.toast_timeout_ms / 1000).max(1) as i64
     }
 }

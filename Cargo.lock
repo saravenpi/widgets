@@ -227,7 +227,7 @@ dependencies = [
 
 [[package]]
 name = "exit"
-version = "0.11.1"
+version = "0.12.0"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -713,7 +713,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "launcher"
-version = "0.11.1"
+version = "0.12.0"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -893,6 +893,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf54715a573b99ac80df0bc206da022bcd442c974952c7b9720069370852e21f"
 
 [[package]]
+name = "ryu"
+version = "1.0.23"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -962,11 +968,37 @@ dependencies = [
 ]
 
 [[package]]
-name = "shell-common"
-version = "0.11.1"
+name = "serde_yaml"
+version = "0.9.34+deprecated"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a8b1a1a2ebf674015cc02edccce75287f1a0130d394307b36743c2f5d504b47"
+dependencies = [
+ "indexmap",
+ "itoa",
+ "ryu",
+ "serde",
+ "unsafe-libyaml",
+]
+
+[[package]]
+name = "settings"
+version = "0.12.0"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
+ "serde",
+ "serde_json",
+ "shell-common",
+]
+
+[[package]]
+name = "shell-common"
+version = "0.12.0"
+dependencies = [
+ "gtk4",
+ "gtk4-layer-shell",
+ "serde",
+ "serde_yaml",
 ]
 
 [[package]]
@@ -977,7 +1009,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "sidebar"
-version = "0.11.1"
+version = "0.12.0"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -1034,7 +1066,7 @@ dependencies = [
 
 [[package]]
 name = "statusbar"
-version = "0.11.1"
+version = "0.12.0"
 dependencies = [
  "async-channel",
  "chrono",
@@ -1226,6 +1258,12 @@ name = "unicode-ident"
 version = "1.0.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2c754d6c33795a1c324727428e5a7dedb5b06195f9890bdbcba760d3e246563"
+
+[[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
 
 [[package]]
 name = "uuid"

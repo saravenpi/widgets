@@ -16,7 +16,9 @@ prints a clear message and exits without opening a window
 | `statusbar` | `statusbar` | Top bar: workspaces via the compositor's own IPC (sway, niri, Hyprland), a clock, CPU/memory readings, and optional volume, brightness, battery and network pills plus a logout button |
 | `sidebar` | `sidebar` | `org.freedesktop.Notifications` daemon plus an overlay list; `mod+n` toggles it |
 | `launcher` | `launcher` | Centered dmenu-style launcher over installed `.desktop` entries; `mod+space` |
-| `shell-common` | (library) | Palette CSS loading and the shared layer-window / theme boilerplate |
+| `exit` | `exit` | Centered session control dialog (exit, reboot, poweroff); `mod+Shift+e` |
+| `settings` | `settings` | Display resolution and system settings dialog |
+| `shell-common` | (library) | Palette CSS loading, YAML config loader (`~/.config/widgets/config.yml`), and shared layer-shell boilerplate |
 
 Every binary answers `--version` before it opens a display, so an installer can
 verify it without a compositor.

@@ -19,8 +19,6 @@ use shell_common::theme;
 use apps::App;
 
 const STYLE: &str = include_str!("../style.css");
-const WIDTH: i32 = 600;
-const TOP_RATIO: f64 = 0.35;
 
 fn main() {
     if std::env::args().skip(1).any(|argument| argument == "--version") {
@@ -50,7 +48,8 @@ fn activate(application: &Application, apps: &Rc<Vec<App>>) {
     let surface = Box::new(Orientation::Vertical, 0);
     surface.add_css_class("surface");
     surface.add_css_class("popup");
-    surface.set_width_request(WIDTH);
+    let cfg = shell_common::config::get();
+    surface.set_width_request(cfg.launcher.width);
     surface.append(&entry);
     surface.append(&list);
     window.set_child(Some(&surface));
@@ -77,6 +76,7 @@ fn layer_window(application: &Application) -> LayerWindow {
 /// Where the field sits: a third down the monitor, and the width it keeps in
 /// the middle of it. Without a monitor to ask, the placeholders are 1920x1080.
 fn margins() -> (i32, i32) {
+    let cfg = shell_common::config::get();
     let display = match gdk::Display::default() {
         Some(display) => display,
         None => return (0, 0),
@@ -92,7 +92,7 @@ fn margins() -> (i32, i32) {
         }
         None => (1920, 1080),
     };
-    let top = (height as f64 * TOP_RATIO) as i32;
-    let side = ((width - WIDTH) / 2).max(0);
+    let top = (height as f64 * cfg.launcher.top_ratio) as i32;
+    let side = ((width - cfg.launcher.width) / 2).max(0);
     (top, side)
 }

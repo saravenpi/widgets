@@ -49,12 +49,13 @@ fn activate(application: &Application) {
     surface.add_css_class("exit-dialog");
     surface.set_width_request(WIDTH);
 
-    let title = Label::new(Some("Exit Sway"));
+    let cfg = shell_common::config::get();
+    let title = Label::new(Some(&cfg.exit.title));
     title.add_css_class("title");
     title.set_halign(gtk4::Align::Start);
     surface.append(&title);
 
-    let subtitle = Label::new(Some("End desktop session, reboot, or shut down"));
+    let subtitle = Label::new(Some(&cfg.exit.subtitle));
     subtitle.add_css_class("subtitle");
     subtitle.set_halign(gtk4::Align::Start);
     surface.append(&subtitle);
@@ -75,9 +76,10 @@ fn activate(application: &Application) {
     exit_btn.add_css_class("action");
     exit_btn.add_css_class("exit");
     let exit_win = window.clone();
+    let exit_cmd = cfg.exit.commands.exit.clone();
     exit_btn.connect_clicked(move |_| {
         exit_win.close();
-        let _ = Command::new("swaymsg").arg("exit").spawn().or_else(|_| {
+        let _ = Command::new("sh").arg("-c").arg(&exit_cmd).spawn().or_else(|_| {
             let sid = std::env::var("XDG_SESSION_ID").unwrap_or_default();
             Command::new("loginctl")
                 .arg("terminate-session")
@@ -90,18 +92,30 @@ fn activate(application: &Application) {
     reboot_btn.add_css_class("action");
     reboot_btn.add_css_class("reboot");
     let reboot_win = window.clone();
+    let reboot_cmd = cfg.exit.commands.reboot.clone();
     reboot_btn.connect_clicked(move |_| {
         reboot_win.close();
-        let _ = Command::new("systemctl").arg("reboot").spawn();
+        let _ = Command::new("sh")
+            .arg("-c")
+            .arg(&reboot_cmd)
+            .spawn()
+            .or_else(|_| Command::new("loginctl").arg("reboot").spawn())
+            .or_else(|_| Command::new("systemctl").arg("reboot").spawn());
     });
 
     let power_btn = Button::with_label("Power Off");
     power_btn.add_css_class("action");
     power_btn.add_css_class("poweroff");
     let power_win = window.clone();
+    let power_cmd = cfg.exit.commands.poweroff.clone();
     power_btn.connect_clicked(move |_| {
         power_win.close();
-        let _ = Command::new("systemctl").arg("poweroff").spawn();
+        let _ = Command::new("sh")
+            .arg("-c")
+            .arg(&power_cmd)
+            .spawn()
+            .or_else(|_| Command::new("loginctl").arg("poweroff").spawn())
+            .or_else(|_| Command::new("systemctl").arg("poweroff").spawn());
     });
 
     actions.append(&cancel_btn);
