@@ -6,6 +6,15 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.1] - 2026-10-17
+
+### Fixed
+
+- `statusbar`: harmonized inner and outer margins across stats, workspace indicators,
+  and right-hand controls to a uniform 4px grid in both X and Y.
+- `theme`: simplified dropdown select UI and styled select menus to use the `undefined medium`
+  font (`font-weight: 500`).
+
 ## [0.13.0] - 2026-10-17
 
 ### Added

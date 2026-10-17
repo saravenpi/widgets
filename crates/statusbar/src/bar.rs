@@ -8,7 +8,7 @@ use gtk4::glib;
 use gtk4::prelude::*;
 use gtk4::{Application, Box, CenterBox, Label};
 
-use shell_common::theme::MODULE_GAP;
+const BAR_GAP: i32 = 4;
 
 use crate::ipc;
 use crate::popup;
@@ -40,7 +40,7 @@ pub fn build(app: &Application, compositor: ipc::Compositor) -> Ui {
     let root = CenterBox::new();
     root.add_css_class("bar");
 
-    let workspaces = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
+    let workspaces = Box::new(gtk4::Orientation::Horizontal, BAR_GAP);
     workspaces.add_css_class("workspaces");
     workspaces.set_halign(gtk4::Align::Start);
     workspaces.set_valign(gtk4::Align::Center);
@@ -91,13 +91,13 @@ fn right_row(controls: &Box) -> (Box, Label, Label) {
     let cpu = Label::new(None);
     cpu.add_css_class("stat");
 
-    let stats = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
+    let stats = Box::new(gtk4::Orientation::Horizontal, BAR_GAP);
     stats.add_css_class("stats");
     stats.set_valign(gtk4::Align::Center);
     stats.append(&ram);
     stats.append(&cpu);
 
-    let right = Box::new(gtk4::Orientation::Horizontal, MODULE_GAP);
+    let right = Box::new(gtk4::Orientation::Horizontal, BAR_GAP);
     right.add_css_class("right");
     right.set_halign(gtk4::Align::End);
     right.set_valign(gtk4::Align::Center);

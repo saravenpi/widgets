@@ -20,7 +20,7 @@
 .bar {
   min-height: 32px;
   margin: 10px 10px 0 10px;
-  padding: 4px 10px;
+  padding: 4px;
   background-color: @palette_bg;
   color: @palette_fg;
 }
@@ -29,8 +29,8 @@ button.ws {
   background-color: alpha(@palette_fg, 0.1);
   min-width: 24px;
   min-height: 24px;
-  padding: 2px 6px;
-  margin: 0 1px;
+  padding: 0 4px;
+  margin: 0;
   font-size: 10px;
   font-weight: 600;
   color: @palette_fg;
@@ -56,11 +56,13 @@ button.ws.urgent:hover {
 }
 
 .clock {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: @palette_fg;
-  padding: 2px 8px;
+  min-height: 24px;
+  padding: 0 8px;
+  margin: 0;
 }
 
 /* Right-hand controls: volume, brightness and the logout button share the same
@@ -75,9 +77,9 @@ button.ws.urgent:hover {
    between them and the controls, is the bar's own module gap. */
 .pill,
 .stat {
-  min-height: 22px;
-  padding: 2px 8px;
-  margin: 0 1px;
+  min-height: 24px;
+  padding: 0 8px;
+  margin: 0;
   background-color: alpha(@palette_fg, 0.1);
   font-size: 10px;
   font-weight: 600;

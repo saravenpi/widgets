@@ -175,9 +175,19 @@ button.scale-pill.active {
 
 dropdown,
 dropdown > button {
+  font-family: "undefined medium", "undefined";
+  font-weight: 500;
+  font-size: 11px;
   background-color: alpha(@palette_fg, 0.06);
   border: none;
   border-radius: 0;
   box-shadow: none;
   color: @palette_fg;
+}
+
+dropdown label,
+dropdown > button label {
+  font-family: "undefined medium", "undefined";
+  font-weight: 500;
+  font-size: 11px;
 }
