@@ -4,7 +4,7 @@ use std::cell::RefCell;
 use std::rc::Rc;
 
 use gtk4::prelude::*;
-use gtk4::{Box, Button, DropDown, Label, Orientation, StringList};
+use gtk4::{Box, Button, DropDown, Label, Orientation, ScrolledWindow, StringList};
 
 use crate::sway;
 
@@ -75,7 +75,13 @@ fn build_output_card(output: &sway::Output) -> Box {
         &mode_strings.iter().map(|s| s.as_str()).collect::<Vec<&str>>()
     );
     let dropdown = DropDown::new(Some(string_list), None::<gtk4::Expression>);
-    dropdown.set_hexpand(true);
+    dropdown.set_hexpand(false);
+    dropdown.set_width_request(160);
+
+    let dd = dropdown.clone();
+    dropdown.connect_realize(move |_| {
+        limit_dropdown_height(&dd);
+    });
 
     if let Some(cur) = output.current_mode {
         if let Some(idx) = unique_modes.iter().position(|(w, h)| *w == cur.width && *h == cur.height) {
@@ -176,4 +182,24 @@ fn build_apply_row(
     actions_row.append(&apply_btn);
     actions_row.append(&feedback);
     actions_row
+}
+
+fn limit_dropdown_height(dropdown: &DropDown) {
+    let mut child = dropdown.first_child();
+    while let Some(w) = child {
+        limit_scrolled_windows(&w);
+        child = w.next_sibling();
+    }
+}
+
+fn limit_scrolled_windows(widget: &gtk4::Widget) {
+    if let Ok(sw) = widget.clone().downcast::<ScrolledWindow>() {
+        sw.set_max_content_height(140);
+        sw.set_propagate_natural_height(true);
+    }
+    let mut child = widget.first_child();
+    while let Some(w) = child {
+        limit_scrolled_windows(&w);
+        child = w.next_sibling();
+    }
 }

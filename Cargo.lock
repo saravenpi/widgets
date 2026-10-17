@@ -132,7 +132,7 @@ checksum = "4e7648175b45a9a48536d676f68d918270699102aa8dab5496df06904c914600"
 
 [[package]]
 name = "cheatsheet"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -238,7 +238,7 @@ dependencies = [
 
 [[package]]
 name = "exit"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -724,7 +724,7 @@ checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
 name = "launcher"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -993,7 +993,7 @@ dependencies = [
 
 [[package]]
 name = "settings"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -1004,7 +1004,7 @@ dependencies = [
 
 [[package]]
 name = "shell-common"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -1020,7 +1020,7 @@ checksum = "f8fadd59c855ef2080decdef8ff161eb6661b86933c9d82e5ba29dc602a55aba"
 
 [[package]]
 name = "sidebar"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "gtk4",
  "gtk4-layer-shell",
@@ -1077,7 +1077,7 @@ dependencies = [
 
 [[package]]
 name = "statusbar"
-version = "0.13.1"
+version = "0.13.2"
 dependencies = [
  "async-channel",
  "chrono",

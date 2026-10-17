@@ -6,6 +6,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.13.2] - 2026-10-17
+
+### Fixed
+
+- `settings`: removed background container styling around the resolution dropdown and display cards.
+- `settings`: constrained resolution dropdown width and limited popover max height (`max_content_height(140)`)
+  so the list never overflows the window or extends excessively down the screen.
+
 ## [0.13.1] - 2026-10-17
 
 ### Fixed
