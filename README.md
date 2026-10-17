@@ -17,7 +17,7 @@ prints a clear message and exits without opening a window
 | `sidebar` | `sidebar` | `org.freedesktop.Notifications` daemon plus an overlay list; `mod+n` toggles it |
 | `launcher` | `launcher` | Centered dmenu-style launcher over installed `.desktop` entries; `mod+space` |
 | `exit` | `exit` | Centered session control dialog (exit, reboot, poweroff); `mod+Shift+e` |
-| `settings` | `settings` | Display resolution and system settings dialog |
+| `settings` | `settings` | Display resolution and system settings dialog; `mod+s` |
 | `shell-common` | (library) | Palette CSS loading, YAML config loader (`~/.config/widgets/config.yml`), and shared layer-shell boilerplate |
 
 Every binary answers `--version` before it opens a display, so an installer can
@@ -210,6 +210,8 @@ exec $HOME/.local/bin/statusbar
 exec $HOME/.local/bin/sidebar         # owns org.freedesktop.Notifications
 bindsym $mod+n      exec $HOME/.local/bin/sidebar toggle
 bindsym $mod+space  exec $HOME/.local/bin/launcher
+bindsym $mod+s      exec $HOME/.local/bin/settings
+bindsym $mod+Shift+e exec $HOME/.local/bin/exit
 
 # niri      ~/.config/niri/config.kdl
 spawn-at-startup "sh" "-c" "$HOME/.local/bin/statusbar"
@@ -219,6 +221,8 @@ exec-once = $HOME/.local/bin/statusbar
 exec-once = $HOME/.local/bin/sidebar   # owns org.freedesktop.Notifications
 bind = $mainMod, N, exec, $HOME/.local/bin/sidebar toggle
 bind = $mainMod, Space, exec, $HOME/.local/bin/launcher
+bind = $mainMod, S, exec, $HOME/.local/bin/settings
+bind = $mainMod SHIFT, E, exec, $HOME/.local/bin/exit
 ```
 
 ### The statusbar
