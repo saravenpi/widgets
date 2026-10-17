@@ -54,9 +54,7 @@ fn parse_percent(stdout: &[u8]) -> Option<u16> {
 
 /// Pick the percent out of a token like `53%/...`.
 fn parse_channel_percent(token: &str) -> Option<u16> {
-    let Some(percent) = token.strip_suffix("%") else {
-        return None;
-    };
+    let percent = token.strip_suffix("%")?;
     percent.trim().parse().ok()
 }
 

@@ -8,7 +8,7 @@ build:
 
 check:
 	cargo check --workspace
-	filet check
+	filet check -fail warn
 
 install: build
 	@mkdir -p $(PREFIX)

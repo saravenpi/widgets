@@ -44,86 +44,7 @@ fn activate(application: &Application) {
     });
     window.add_controller(escape_key);
 
-    let surface = Box::new(Orientation::Vertical, 0);
-    surface.add_css_class("surface");
-    surface.add_css_class("exit-dialog");
-    surface.set_width_request(WIDTH);
-
-    let cfg = shell_common::config::get();
-    let title = Label::new(Some(&cfg.exit.title));
-    title.add_css_class("title");
-    title.set_halign(gtk4::Align::Start);
-    surface.append(&title);
-
-    let subtitle = Label::new(Some(&cfg.exit.subtitle));
-    subtitle.add_css_class("subtitle");
-    subtitle.set_halign(gtk4::Align::Start);
-    surface.append(&subtitle);
-
-    let actions = Box::new(Orientation::Horizontal, 8);
-    actions.add_css_class("actions");
-    actions.set_halign(gtk4::Align::End);
-
-    let cancel_btn = Button::with_label("Cancel");
-    cancel_btn.add_css_class("action");
-    cancel_btn.add_css_class("cancel");
-    let cancel_win = window.clone();
-    cancel_btn.connect_clicked(move |_| {
-        cancel_win.close();
-    });
-
-    let exit_btn = Button::with_label("Exit");
-    exit_btn.add_css_class("action");
-    exit_btn.add_css_class("exit");
-    let exit_win = window.clone();
-    let exit_cmd = cfg.exit.commands.exit.clone();
-    exit_btn.connect_clicked(move |_| {
-        exit_win.close();
-        let _ = Command::new("sh").arg("-c").arg(&exit_cmd).spawn().or_else(|_| {
-            let sid = std::env::var("XDG_SESSION_ID").unwrap_or_default();
-            Command::new("loginctl")
-                .arg("terminate-session")
-                .arg(sid)
-                .spawn()
-        });
-    });
-
-    let reboot_btn = Button::with_label("Reboot");
-    reboot_btn.add_css_class("action");
-    reboot_btn.add_css_class("reboot");
-    let reboot_win = window.clone();
-    let reboot_cmd = cfg.exit.commands.reboot.clone();
-    reboot_btn.connect_clicked(move |_| {
-        reboot_win.close();
-        let _ = Command::new("sh")
-            .arg("-c")
-            .arg(&reboot_cmd)
-            .spawn()
-            .or_else(|_| Command::new("loginctl").arg("reboot").spawn())
-            .or_else(|_| Command::new("systemctl").arg("reboot").spawn());
-    });
-
-    let power_btn = Button::with_label("Power Off");
-    power_btn.add_css_class("action");
-    power_btn.add_css_class("poweroff");
-    let power_win = window.clone();
-    let power_cmd = cfg.exit.commands.poweroff.clone();
-    power_btn.connect_clicked(move |_| {
-        power_win.close();
-        let _ = Command::new("sh")
-            .arg("-c")
-            .arg(&power_cmd)
-            .spawn()
-            .or_else(|_| Command::new("loginctl").arg("poweroff").spawn())
-            .or_else(|_| Command::new("systemctl").arg("poweroff").spawn());
-    });
-
-    actions.append(&cancel_btn);
-    actions.append(&exit_btn);
-    actions.append(&reboot_btn);
-    actions.append(&power_btn);
-    surface.append(&actions);
-
+    let surface = build_surface(&window);
     let center = Box::new(Orientation::Vertical, 0);
     center.set_valign(gtk4::Align::Center);
     center.set_halign(gtk4::Align::Center);
@@ -148,7 +69,89 @@ fn activate(application: &Application) {
 
     window.set_child(Some(&center));
     window.present();
-    cancel_btn.grab_focus();
+    surface.grab_focus();
+}
+
+fn build_surface(window: &gtk4::ApplicationWindow) -> Box {
+    let surface = Box::new(Orientation::Vertical, 0);
+    surface.add_css_class("surface");
+    surface.add_css_class("exit-dialog");
+    surface.set_width_request(WIDTH);
+
+    let cfg = shell_common::config::get();
+    let title = Label::new(Some(&cfg.exit.title));
+    title.add_css_class("title");
+    title.set_halign(gtk4::Align::Start);
+    surface.append(&title);
+
+    let subtitle = Label::new(Some(&cfg.exit.subtitle));
+    subtitle.add_css_class("subtitle");
+    subtitle.set_halign(gtk4::Align::Start);
+    surface.append(&subtitle);
+
+    surface.append(&build_actions(window, &cfg.exit));
+    surface
+}
+
+fn build_actions(window: &gtk4::ApplicationWindow, cfg: &shell_common::config::ExitConfig) -> Box {
+    let actions = Box::new(Orientation::Horizontal, 8);
+    actions.add_css_class("actions");
+    actions.set_halign(gtk4::Align::End);
+
+    let cancel_btn = Button::with_label("Cancel");
+    cancel_btn.add_css_class("action");
+    cancel_btn.add_css_class("cancel");
+    let cancel_win = window.clone();
+    cancel_btn.connect_clicked(move |_| cancel_win.close());
+
+    let exit_btn = Button::with_label("Exit");
+    exit_btn.add_css_class("action");
+    exit_btn.add_css_class("exit");
+    let exit_win = window.clone();
+    let exit_cmd = cfg.commands.exit.clone();
+    exit_btn.connect_clicked(move |_| {
+        exit_win.close();
+        let _ = Command::new("sh").arg("-c").arg(&exit_cmd).spawn().or_else(|_| {
+            let sid = std::env::var("XDG_SESSION_ID").unwrap_or_default();
+            Command::new("loginctl").arg("terminate-session").arg(sid).spawn()
+        });
+    });
+
+    let reboot_btn = Button::with_label("Reboot");
+    reboot_btn.add_css_class("action");
+    reboot_btn.add_css_class("reboot");
+    let reboot_win = window.clone();
+    let reboot_cmd = cfg.commands.reboot.clone();
+    reboot_btn.connect_clicked(move |_| {
+        reboot_win.close();
+        let _ = Command::new("sh")
+            .arg("-c")
+            .arg(&reboot_cmd)
+            .spawn()
+            .or_else(|_| Command::new("loginctl").arg("reboot").spawn())
+            .or_else(|_| Command::new("systemctl").arg("reboot").spawn());
+    });
+
+    let power_btn = Button::with_label("Power Off");
+    power_btn.add_css_class("action");
+    power_btn.add_css_class("poweroff");
+    let power_win = window.clone();
+    let power_cmd = cfg.commands.poweroff.clone();
+    power_btn.connect_clicked(move |_| {
+        power_win.close();
+        let _ = Command::new("sh")
+            .arg("-c")
+            .arg(&power_cmd)
+            .spawn()
+            .or_else(|_| Command::new("loginctl").arg("poweroff").spawn())
+            .or_else(|_| Command::new("systemctl").arg("poweroff").spawn());
+    });
+
+    actions.append(&cancel_btn);
+    actions.append(&exit_btn);
+    actions.append(&reboot_btn);
+    actions.append(&power_btn);
+    actions
 }
 
 fn layer_window(application: &Application) -> LayerWindow {

@@ -1,5 +1,7 @@
 //! `settings`: desktop settings and display manager widget.
 
+mod displays;
+mod pages;
 mod sway;
 mod ui;
 
